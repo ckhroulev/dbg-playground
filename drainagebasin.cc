@@ -1,42 +1,9 @@
-
-// printf, etc
 #include <cstdio>
 
 // MPI stuff, NetCDF I/O
 // #include <mpi.h>
 // #include "PISMNC3File.hh"
 
-// GSL stuff
-#include <gsl/gsl_errno.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_odeiv2.h>
-
-int function(double t, const double y[], // inputs
-             double f[],                 // output
-             void* params) {             // optional input/output
-
-  f[0] = 1.0;
-  f[1] = 1.0;
-
-  return GSL_SUCCESS;
-}
-
-int jacobian(double t, const double y[],  // inputs
-             double *dfdy, double dfdt[], // outputs
-             void *params) {              // optional input/output
-  // J(i,j) = dfdy[i * dimension + j]
-  // J(i,j) = \frac{\partial f_i}{\partial y_j}
-
-  dfdy[0 * 2 + 0] = 0;
-  dfdy[0 * 2 + 1] = 0;
-  dfdy[1 * 2 + 0] = 0;
-  dfdy[1 * 2 + 1] = 0;
-
-  dfdt[0] = 0;
-  dfdt[1] = 0;
-
-  return GSL_SUCCESS;
-}
 
 int main(int argc, char **argv) {
   gsl_odeiv2_system system = {function, jacobian, 2, NULL};
@@ -49,7 +16,7 @@ int main(int argc, char **argv) {
   double t = 0.0, t1 = 100.0;
   double y[2] = { 0.0, 0.0 };
 
-  printf("set grid; plot \"-\" with points title \"ODE solution\"\n");
+  printf("set grid; plot \"-\" with points title \"ODE system solution\"\n");
   for (i = 1; i <= 100; i++)
     {
       double ti = i * t1 / 100.0;

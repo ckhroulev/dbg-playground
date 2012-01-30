@@ -26,6 +26,7 @@ void DEM_Bilinear::eval(double x0, double y0,
                         double f[], double jac[]) {
   int i, j;
 
+  // Pretend that outside the grid the surface is perfectly flat:
   if (x[0] > x0 || x0 >= x[Mx-1] ||
       y[0] > y0 || y0 >= y[My-1]) {
 
@@ -45,6 +46,14 @@ void DEM_Bilinear::eval(double x0, double y0,
   i = gsl_interp_accel_find(x_accel, x, Mx, x0);
   j = gsl_interp_accel_find(y_accel, y, My, y0);
 
+
+  // Get the surface elevation at grid corners (arranged as follows):
+  //
+  // B-----C
+  // |     |
+  // |     |
+  // A-----D
+  //
   gsl_matrix_view z_view = gsl_matrix_view_array(z, My, Mx);
   gsl_matrix * m = &z_view.matrix;
   double
@@ -53,23 +62,20 @@ void DEM_Bilinear::eval(double x0, double y0,
     C = gsl_matrix_get(m, i + 1, j + 1),
     D = gsl_matrix_get(m, i + 1, j);
 
-  if (f != NULL) {
-    double
-      alpha = one_over_dx * (x[i] - x0),
-      beta  = one_over_dy * (y[j] - y0);
+  double gamma = one_over_dx * one_over_dy * (A + C - B - D);
 
-    f[0] = - one_over_dx * ((1 - beta)  * (D - A) + beta  * (C - B));
-    f[1] = - one_over_dy * ((1 - alpha) * (B - A) + alpha * (C - D));
+  if (f != NULL) {
+    f[0] = -((D - A) * one_over_dx + (y0 - y[j]) * gamma);
+    f[1] = -((B - A) * one_over_dy + (x0 - x[i]) * gamma);
   }
 
   if (jac != NULL) {
     // J(i,j) = dfdy[i * dimension + j]
     // J(i,j) = \frac{\partial f_i}{\partial y_j}
 
-    double jac_factor = one_over_dx * one_over_dy * (A + C - B - D);
     jac[0 * 2 + 0] = 0;
-    jac[0 * 2 + 1] = jac_factor;
-    jac[1 * 2 + 0] = jac_factor;
+    jac[0 * 2 + 1] = -gamma;
+    jac[1 * 2 + 0] = -gamma;
     jac[1 * 2 + 1] = 0;
   }
 }

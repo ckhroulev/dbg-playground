@@ -1,6 +1,6 @@
 #include "drainagebasin.hh"
 
-DEM_Bilinear::DEM_Bilinear(double *my_x, int my_Mx, double *my_y, int my_My, double *my_z) {
+DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My, double *my_z) {
   x_accel = gsl_interp_accel_alloc();
   y_accel = gsl_interp_accel_alloc();
 
@@ -17,10 +17,15 @@ DEM_Bilinear::DEM_Bilinear(double *my_x, int my_Mx, double *my_y, int my_My, dou
   one_over_dy = 1.0 / (y[1] - y[0]);
 }
 
-DEM_Bilinear::~DEM_Bilinear() {
+DEM::~DEM() {
   gsl_interp_accel_free(x_accel);
   gsl_interp_accel_free(y_accel);
 }
+
+DEM_Bilinear::DEM_Bilinear(double *my_x, int my_Mx, double *my_y, int my_My, double *my_z)
+  :DEM(my_x, my_Mx, my_y, my_My, my_z) {
+}
+
 
 void DEM_Bilinear::eval(double x0, double y0,
                         double f[], double jac[]) {
@@ -84,8 +89,7 @@ int function(double t, const double y[], // inputs
              double f[],                 // output
              void* params) {             // optional input/output
 
-  DEM_Bilinear *dem = (DEM_Bilinear*)params;
-  dem->eval(y[0], y[1], f, NULL);
+  ((DEM*)params)->eval(y[0], y[1], f, NULL);
 
   return GSL_SUCCESS;
 }
@@ -94,8 +98,7 @@ int jacobian(double t, const double y[],  // inputs
              double *dfdy, double dfdt[], // outputs
              void *params) {              // optional input/output
 
-  DEM_Bilinear *dem = (DEM_Bilinear*)params;
-  dem->eval(y[0], y[1], NULL, dfdy);
+  ((DEM*)params)->eval(y[0], y[1], NULL, dfdy);
 
   dfdt[0] = 0;
   dfdt[1] = 0;

@@ -19,7 +19,7 @@ set (CMAKE_C_FLAGS_DEBUG "-g ${PEDANTIC_CFLAGS}")
 set (CMAKE_CXX_FLAGS_DEBUG "-g ${PEDANTIC_CXXFLAGS}")
 
 include_directories (${GSL_INCLUDES} ${NETCDF_INCLUDES} ${MPI_INCLUDE_PATH})
-set (EXTERNAL_LIBS ${GSL_LIBRARIES})# ${NETCDF_LIBRARIES} ${MPI_LIBRARIES})
+set (EXTERNAL_LIBS ${GSL_LIBRARIES} ${NETCDF_LIBRARIES} ${MPI_LIBRARIES})
 
-add_executable (db drainagebasin.cc system.cc)
+add_executable (db drainagebasin.cc system.cc flowline.cc PISMNC3File.cc PISMNCFile.cc)
 target_link_libraries(db ${EXTERNAL_LIBS})

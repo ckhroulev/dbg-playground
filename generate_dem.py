@@ -1,8 +1,8 @@
 from PISMNC import PISMDataset as NC
 import numpy as np
 
-Mx = 61
-My = 61
+Mx = 101
+My = 101
 Lx = 20
 Ly = 20
 

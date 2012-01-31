@@ -40,30 +40,54 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  DEM_Bilinear dem(&X[0], X.size(), &Y[0], Y.size(), &Z[0]);
+  DEM_Bilinear *dem = new DEM_Bilinear(&X[0], X.size(), &Y[0], Y.size(), &Z[0]);
 
-  gsl_odeiv2_system system = {function, jacobian, 2, &dem};
+  gsl_odeiv2_system system = {function, jacobian, 2, dem};
 
   gsl_odeiv2_step *step = gsl_odeiv2_step_alloc(
-                                                // gsl_odeiv2_step_bsimp,
                                                 gsl_odeiv2_step_rk2,
                                                 2);
 
   // Set up the plot window (pipe this through gnuplot):
-  printf("set xrange [%f:%f];\n"
-         "set yrange [%f:%f]\n"
-         "set grid;\n"
-         "set multiplot\n",
-         X.front(), X.back(),
-         Y.front(), Y.back());
+  // printf("set xrange [%f:%f];\n"
+  //        "set yrange [%f:%f]\n"
+  //        "set size ratio %f;\n"
+  //        "set format xy \"\"\n"
+  //        "set multiplot\n",
+  //        X.front(), X.back(),
+  //        Y.front(), Y.back(),
+  //        (Y.back() - Y.front()) / (X.back() - X.front()));
 
-  for (int i = 0; i < X.size(); i += 10) {
-    for (int j = 0; j < Y.size(); j += 10) {
-      flowline(system, step, X[i], Y[j], "red");
+  double *mask = new double[X.size() * Y.size()];
+  if (mask == NULL) {
+    printf("Memory allocation failed.\n");
+    MPI_Finalize();
+    return 1;
+  }
+
+  for (int n = 0; n < X.size() * Y.size(); ++n)
+    mask[n] = GSL_NAN;
+
+  int k = 0;
+  for (int i = 0; i < X.size(); i++) {
+    for (int j = 0; j < Y.size(); j++) {
+      flowline_mask(system, step, X[i], Y[j], k, mask);
+      k++;
     }
   }
 
+  ierr = write_mask(mpi_comm, mpi_rank, "mask.nc", X, Y, mask); CHKERRQ(ierr);
+
+  // int skip = 2, k = 0;
+  // for (int i = 0; i < X.size(); i += skip) {
+  //   for (int j = (skip / 2) * (i / skip % 2); j < Y.size(); j += skip) {
+  //     flowline_gnuplot(system, step, X[i], Y[j], "black");
+  //   }
+  // }
+
   gsl_odeiv2_step_free (step);
+  delete[] mask;
+  delete dem;
 
   /* Shut down MPI. */
   MPI_Finalize();

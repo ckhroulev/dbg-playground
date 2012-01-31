@@ -5,6 +5,11 @@
 #include <gsl/gsl_odeiv2.h>
 #include <gsl/gsl_interp.h>
 
+#include <mpi.h>
+#include <vector>
+
+using namespace std;
+
 // Purely virtual DEM interface class.
 class DEM {
 public:
@@ -12,7 +17,15 @@ public:
   virtual ~DEM();
 
   virtual void eval(double x, double y, double f[], double jac[]) = 0;
-protected:
+  virtual double x_min();
+  virtual double x_max();
+
+  virtual double y_min();
+  virtual double y_max();
+
+  virtual double dx();
+  virtual double dy();
+
   double *x, *y, *z;
   int Mx, My;
   gsl_interp_accel *x_accel, *y_accel;
@@ -29,6 +42,12 @@ public:
 
 int function(double t, const double y[], double f[], void* params);
 int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *params);
+
+int read_dem(MPI_Comm com, int rank,
+             const char *filename,
+             vector<double> &X,
+             vector<double> &Y,
+             vector<double> &Z);
 
 int flowline(gsl_odeiv2_system system, gsl_odeiv2_step *step,
              double x0, double y0, const char *color);

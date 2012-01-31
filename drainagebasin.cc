@@ -5,7 +5,6 @@
 #include <cmath>
 
 #include "drainagebasin.hh"
-#include "PISMNC3File.hh"
 
 using namespace std;
 
@@ -29,42 +28,19 @@ int main(int argc, char **argv) {
   MPI_Comm_rank(mpi_comm, &mpi_rank);
   MPI_Get_processor_name(mpi_name, &mpi_namelen);
 
-  printf("mpi_name: %s size: %d rank: %d\n", mpi_name, mpi_size, mpi_rank);
+  printf("# mpi_name: %s size: %d rank: %d\n", mpi_name, mpi_size, mpi_rank);
 
-  // Set up the grid (read from a file)
-  vector<double> X, Y, Z;
-  unsigned int Mx, My;
-  PISMNC3File nc(mpi_comm, mpi_rank);
+  vector<double> X, Y,          // coordinates
+    Z;                          // elevation, interpreted as a 2D array
 
-  ierr = nc.open("dem.nc", NC_NOWRITE); CHKERRQ(ierr);
+  ierr = read_dem(mpi_comm, mpi_rank, "dem.nc", X, Y, Z);
+  if (ierr != 0) {
+    printf("Initialization failed.\n");
+    MPI_Finalize();
+    return 1;
+  }
 
-  ierr = nc.inq_dimlen("x", Mx); CHKERRQ(ierr);
-  ierr = nc.inq_dimlen("y", My); CHKERRQ(ierr);
-
-  vector<unsigned int> start(1), count(1);
-  start[0] = 0;
-  count[0] = Mx;
-  X.resize(Mx);
-  ierr = nc.get_vara_double("x", start, count, &X[0]); CHKERRQ(ierr);
-
-  count[0] = My;
-  Y.resize(My);
-  ierr = nc.get_vara_double("y", start, count, &Y[0]); CHKERRQ(ierr);
-
-  start.resize(2);
-  count.resize(2);
-  start[0] = 0;
-  start[1] = 0;
-  count[0] = Mx;
-  count[1] = My;
-  Z.resize(Mx*My);
-  ierr = nc.get_vara_double("usurf", start, count, &Z[0]); CHKERRQ(ierr);
-
-  ierr = nc.close(); CHKERRQ(ierr);
-
-  return 0;                     // FIXME
-
-  DEM_Bilinear dem(&X[0], 2, &Y[0], 2, &Z[0]);
+  DEM_Bilinear dem(&X[0], X.size(), &Y[0], Y.size(), &Z[0]);
 
   gsl_odeiv2_system system = {function, jacobian, 2, &dem};
 
@@ -81,16 +57,11 @@ int main(int argc, char **argv) {
          X.front(), X.back(),
          Y.front(), Y.back());
 
-  // for (int i = 0; i < 8; ++i) {
-  //   for (int j = 0; j < 8; ++j) {
-  //     double x = -1 + 0.25 * i,
-  //       y = -1 + 0.25 * j;
-  //     if (fabs(x) != fabs(y))
-  //       flowline(system, step, x, y, "black");
-  //   }
-  // }
-
-  flowline(system, step, 0.5, 0.51, "red");
+  for (int i = 0; i < X.size(); i += 10) {
+    for (int j = 0; j < Y.size(); j += 10) {
+      flowline(system, step, X[i], Y[j], "red");
+    }
+  }
 
   gsl_odeiv2_step_free (step);
 

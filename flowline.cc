@@ -9,9 +9,12 @@ int flowline(gsl_odeiv2_system system,
              double x0, double y0, const char *color) {
   vector<double> y(2),          // new position
     y_old(2),                   // old position
-    yerr(2);                    // error estimate
+    yerr(2),                    // error estimate
+    dy(2);
 
-  double step_size = 1e-2;
+  DEM *dem = (DEM*)system.params;
+
+  double step_size = (dem->dx() < dem->dy() ? dem->dx() : dem->dy()) / 2.0;
 
   int counter = 0;
 
@@ -37,18 +40,21 @@ int flowline(gsl_odeiv2_system system,
     }
 
     printf ("%.5e %.5e\n", y[0], y[1]);
-
-    if (sqrt((y[0] - y_old[0])*(y[0] - y_old[0]) +
-             (y[1] - y_old[1])*(y[1] - y_old[1])) < step_size*step_size) {
+    dy[0] = y[0] - y_old[0];
+    dy[1] = y[1] - y_old[1];
+    if (sqrt(dy[0]*dy[0] + dy[1]*dy[1]) < 8e3) {
       // y[0] += step_size;        // FIXME
       counter++;
 
-      if (counter > 5)
+      if (counter > 1)
         break;
     }
 
-    y_old = y;
+    if (y[0] <= dem->x_min() || y[0] >= dem->x_max() ||
+        y[1] <= dem->y_min() || y[1] >= dem->y_max())
+      break;
 
+    y_old = y;
   }
 
   printf ("e\n");

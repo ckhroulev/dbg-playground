@@ -1,4 +1,5 @@
 #include "drainagebasin.hh"
+#include <cmath>
 
 DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My, double *my_z) {
   x_accel = gsl_interp_accel_alloc();
@@ -22,6 +23,33 @@ DEM::~DEM() {
   gsl_interp_accel_free(y_accel);
 }
 
+double DEM::x_min() {
+  return x[0];
+}
+
+double DEM::x_max() {
+  return x[Mx-1];
+}
+
+
+double DEM::y_min() {
+  return y[0];
+}
+
+double DEM::y_max() {
+  return y[My-1];
+}
+
+double DEM::dx() {
+  return x[1] - x[0];
+}
+
+double DEM::dy() {
+  return y[1] - y[0];
+}
+
+
+
 DEM_Bilinear::DEM_Bilinear(double *my_x, int my_Mx, double *my_y, int my_My, double *my_z)
   :DEM(my_x, my_Mx, my_y, my_My, my_z) {
 }
@@ -31,9 +59,14 @@ void DEM_Bilinear::eval(double x0, double y0,
                         double f[], double jac[]) {
   int i, j;
 
+  i = gsl_interp_accel_find(x_accel, x, Mx, x0);
+  j = gsl_interp_accel_find(y_accel, y, My, y0);
+
   // Pretend that outside the grid the surface is perfectly flat:
-  if (x[0] > x0 || x0 >= x[Mx-1] ||
-      y[0] > y0 || y0 >= y[My-1]) {
+  if (i < 0 ||
+      i + 1 > Mx - 1 ||
+      j < 0 ||
+      j + 1 > My - 1) {
 
     // printf("x = %f, y = %f\n", x0, y0);
 
@@ -48,10 +81,6 @@ void DEM_Bilinear::eval(double x0, double y0,
     return;
   }
 
-  i = gsl_interp_accel_find(x_accel, x, Mx, x0);
-  j = gsl_interp_accel_find(y_accel, y, My, y0);
-
-
   // Get the surface elevation at grid corners (arranged as follows):
   //
   // B-----C
@@ -59,7 +88,7 @@ void DEM_Bilinear::eval(double x0, double y0,
   // |     |
   // A-----D
   //
-  gsl_matrix_view z_view = gsl_matrix_view_array(z, My, Mx);
+  gsl_matrix_view z_view = gsl_matrix_view_array(z, Mx, My);
   gsl_matrix * m = &z_view.matrix;
   double
     A = gsl_matrix_get(m, i,     j),
@@ -72,6 +101,13 @@ void DEM_Bilinear::eval(double x0, double y0,
   if (f != NULL) {
     f[0] = -((D - A) * one_over_dx + (y0 - y[j]) * gamma);
     f[1] = -((B - A) * one_over_dy + (x0 - x[i]) * gamma);
+
+    double magnitude = sqrt(f[0]*f[0] + f[1]*f[1]);
+
+    if (magnitude > 1e-6) {
+      f[0] /= magnitude;
+      f[1] /= magnitude;
+    }
   }
 
   if (jac != NULL) {

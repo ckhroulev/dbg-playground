@@ -21,13 +21,14 @@ set (CMAKE_CXX_FLAGS_DEBUG "-g ${PEDANTIC_CXXFLAGS}")
 include_directories (${GSL_INCLUDES} ${NETCDF_INCLUDES} ${MPI_INCLUDE_PATH})
 set (EXTERNAL_LIBS ${GSL_LIBRARIES} ${NETCDF_LIBRARIES} ${MPI_LIBRARIES})
 
+# Tell GSL to use inline versions of some functions:
 add_definitions(-DHAVE_INLINE)
 
 add_executable (db
-  drainagebasin.cc
-  system.cc
-  flowline.cc
-  input.cc
-  PISMNC3File.cc
-  PISMNCFile.cc)
+  src/drainagebasin.cc
+  src/system.cc
+  src/flowline.cc
+  src/input.cc
+  src/PISMNC3File.cc
+  src/PISMNCFile.cc)
 target_link_libraries(db ${EXTERNAL_LIBS})

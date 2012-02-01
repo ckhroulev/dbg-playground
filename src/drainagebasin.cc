@@ -68,22 +68,17 @@ int main(int argc, char **argv) {
   for (int n = 0; n < X.size() * Y.size(); ++n)
     mask[n] = GSL_NAN;
 
-  int k = 0;
+  int k = 1;
+  bool new_terminus = false;
   for (int i = 0; i < X.size(); i++) {
     for (int j = 0; j < Y.size(); j++) {
-      flowline_mask(system, step, X[i], Y[j], k, mask);
-      k++;
+      flowline_mask(system, step, X[i], Y[j], k, new_terminus, mask);
+      if (new_terminus)
+        k++;
     }
   }
 
   ierr = write_mask(mpi_comm, mpi_rank, "mask.nc", X, Y, mask); CHKERRQ(ierr);
-
-  // int skip = 2, k = 0;
-  // for (int i = 0; i < X.size(); i += skip) {
-  //   for (int j = (skip / 2) * (i / skip % 2); j < Y.size(); j += skip) {
-  //     flowline_gnuplot(system, step, X[i], Y[j], "black");
-  //   }
-  // }
 
   gsl_odeiv2_step_free (step);
   delete[] mask;

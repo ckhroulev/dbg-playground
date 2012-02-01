@@ -7,7 +7,8 @@ using namespace std;
 int flowline_mask(gsl_odeiv2_system system,
                   gsl_odeiv2_step *step,
                   double x0, double y0,
-                  int marker, double *mask) {
+                  int marker, bool &new_terminus,
+                  double *mask) {
   double y[2],          // new position
     y_old[2],                   // old position
     yerr[2],                    // error estimate
@@ -36,9 +37,7 @@ int flowline_mask(gsl_odeiv2_system system,
 
   for (counter = 0; counter < n_max; ++counter) {
 
-    dem->indices(y[0], y[1],
-                 dem->path[counter].i,
-                 dem->path[counter].j);
+    dem->indices(y[0], y[1], dem->path[counter].i, dem->path[counter].j);
 
     if (y[0] <= dem->x_min() || y[0] >= dem->x_max() ||
         y[1] <= dem->y_min() || y[1] >= dem->y_max())
@@ -54,7 +53,7 @@ int flowline_mask(gsl_odeiv2_system system,
 
     step_size = (grid_spacing / steps_per_cell) / f_mag;
 
-    // make a step
+    // take a step
     int status = gsl_odeiv2_step_apply(step,
                                        0,         // starting time (irrelevant)
                                        step_size, // step size
@@ -73,21 +72,17 @@ int flowline_mask(gsl_odeiv2_system system,
 
   gsl_matrix_view mask_view = gsl_matrix_view_array(mask, dem->Mx, dem->My);
   gsl_matrix * m = &mask_view.matrix;
-
-  // determine if we need to keep the marker picked up from downstream:
-  {
-    double downstream_value = gsl_matrix_get(m,
-                                             dem->path[counter-1].i,
-                                             dem->path[counter-1].j);
-
-    if (gsl_isnan(downstream_value) == false)
-      marker = downstream_value;
-  }
+  new_terminus = true;
 
   for (int k = counter - 1; k >= 0; --k) {
     double current_value = gsl_matrix_get(m,
                                           dem->path[k].i,
                                           dem->path[k].j);
+
+    if (current_value <= marker && k == counter - 1) {
+      marker = current_value;
+      new_terminus = false;
+    }
 
     if (gsl_isnan(current_value) || current_value > marker) {
       gsl_matrix_set(m,

@@ -70,4 +70,4 @@ int flowline_gnuplot(gsl_odeiv2_system system, gsl_odeiv2_step *step,
                      double x0, double y0, const char *color);
 
 int flowline_mask(gsl_odeiv2_system system, gsl_odeiv2_step *step,
-                  double x0, double y0, int marker, double *mask);
+                  double x0, double y0, int marker, bool &new_terminus, double *mask);

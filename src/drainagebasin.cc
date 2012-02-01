@@ -31,16 +31,16 @@ int main(int argc, char **argv) {
   printf("# mpi_name: %s size: %d rank: %d\n", mpi_name, mpi_size, mpi_rank);
 
   vector<double> X, Y,          // coordinates
-    Z;                          // elevation, interpreted as a 2D array
+    Z, thk;                     // elevation, interpreted as a 2D array
 
-  ierr = read_dem(mpi_comm, mpi_rank, "dem.nc", X, Y, Z);
+  ierr = read_dem(mpi_comm, mpi_rank, "dem.nc", X, Y, Z, thk);
   if (ierr != 0) {
     printf("Initialization failed.\n");
     MPI_Finalize();
     return 1;
   }
 
-  DEM_Bilinear *dem = new DEM_Bilinear(&X[0], X.size(), &Y[0], Y.size(), &Z[0]);
+  DEM *dem = new DEM(&X[0], X.size(), &Y[0], Y.size(), &Z[0], &thk[0]);
 
   gsl_odeiv2_system system = {function, jacobian, 2, dem};
 
@@ -65,16 +65,14 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  for (int n = 0; n < X.size() * Y.size(); ++n)
-    mask[n] = GSL_NAN;
+  // initialize the mask
+  
 
   int k = 1;
   bool new_terminus = false;
   for (int i = 0; i < X.size(); i++) {
     for (int j = 0; j < Y.size(); j++) {
-      flowline_mask(system, step, X[i], Y[j], k, new_terminus, mask);
-      if (new_terminus)
-        k++;
+      streamline(system, step, i, j, mask);
     }
   }
 

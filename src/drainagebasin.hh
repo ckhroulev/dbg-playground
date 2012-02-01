@@ -11,44 +11,41 @@
 
 using namespace std;
 
-struct Cell {
-  int i, j;
-};
-
-// Purely virtual DEM interface class.
 class DEM {
 public:
-  DEM(double *x, int Mx, double *y, int My, double *z);
-  virtual ~DEM();
+  DEM(double *x, int Mx, double *y, int My, double *z, double *thickness);
+  ~DEM();
 
-  virtual void eval(double x, double y, double f[], double jac[]) = 0;
-  virtual double elevation(double x, double y) = 0;
-  virtual void indices(double x, double y, int &i, int &j);
+  void evaluate(const double *position, double *elevation, double *thickness,
+                double *f, double *jac);
 
-  virtual double x_min();
-  virtual double x_max();
+  int find_cell(const double *position,
+                int &i, int &j);
 
-  virtual double y_min();
-  virtual double y_max();
+  double x_min();
+  double x_max();
 
-  virtual double dx();
-  virtual double dy();
+  double y_min();
+  double y_max();
 
-  double *x, *y, *z;
+  double dx();
+  double dy();
+
+  double get_x(int i);
+  double get_y(int j);
+
+  int get_Mx();
+  int get_My();
+
+protected:
+  double *x, *y, *z, *thk;
   int Mx, My;
   gsl_interp_accel *x_accel, *y_accel;
-  double one_over_dx, one_over_dy;
+  double x_spacing, y_spacing, one_over_dx, one_over_dy;
+  int i_last, j_last;
 
-  vector<Cell> path;
-};
-
-// A piecewise-bilinear DEM using surface elevation data on a regular grid.
-class DEM_Bilinear : public DEM {
-public:
-  DEM_Bilinear(double *x, int Mx, double *y, int My, double *z);
-  virtual ~DEM_Bilinear() {}
-  virtual void eval(double x, double y, double f[], double jac[]);
-  virtual double elevation(double x, double y);
+  void get_corner_values(int i, int j, double *data,
+                         double &A, double &B, double &C, double &D);
 };
 
 int function(double t, const double y[], double f[], void* params);
@@ -58,7 +55,8 @@ int read_dem(MPI_Comm com, int rank,
              const char *filename,
              vector<double> &X,
              vector<double> &Y,
-             vector<double> &Z);
+             vector<double> &Z,
+             vector<double> &thk);
 
 int write_mask(MPI_Comm com, int rank,
                const char *filename,
@@ -66,8 +64,12 @@ int write_mask(MPI_Comm com, int rank,
                vector<double> &Y,
                double *Z);
 
-int flowline_gnuplot(gsl_odeiv2_system system, gsl_odeiv2_step *step,
-                     double x0, double y0, const char *color);
+void init_mask(int Mx, int My,
+               double *elevation,
+               double *thickness,
+               double *mask);
 
-int flowline_mask(gsl_odeiv2_system system, gsl_odeiv2_step *step,
-                  double x0, double y0, int marker, bool &new_terminus, double *mask);
+int streamline(gsl_odeiv2_system system,
+               gsl_odeiv2_step *step,
+               int i, int j,
+               double *mask);

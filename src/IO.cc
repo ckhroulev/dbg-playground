@@ -5,7 +5,8 @@ int read_dem(MPI_Comm com, int rank,
              const char *filename,
              vector<double> &X,
              vector<double> &Y,
-             vector<double> &Z) {
+             vector<double> &Z,
+             vector<double> &thk) {
 
   int ierr;
   unsigned int Mx, My;
@@ -60,9 +61,17 @@ int read_dem(MPI_Comm com, int rank,
   start[1] = 0;
   count[0] = Mx;
   count[1] = My;
-  Z.resize(Mx*My);
 
+  Z.resize(Mx*My);
   ierr = nc.get_vara_double("usurf", start, count, &Z[0]);
+  if (ierr != NC_NOERR) {
+    printf("Can't read the 'usurf' variable.\n");
+    ierr = nc.close();
+    return 1;
+  }
+
+  thk.resize(Mx*My);
+  ierr = nc.get_vara_double("thk", start, count, &thk[0]);
   if (ierr != NC_NOERR) {
     printf("Can't read the 'usurf' variable.\n");
     ierr = nc.close();

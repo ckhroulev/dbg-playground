@@ -30,9 +30,9 @@ add_definitions(-DHAVE_INLINE -DGSL_RANGE_CHECK_OFF)
 
 add_executable (db
   src/drainagebasin.cc
+  src/init.cc
   src/DEM.cc
-  src/system.cc
-  src/flowline.cc
+  src/streamline.cc
   src/IO.cc
   src/PISMNC3File.cc
   src/PISMNCFile.cc)

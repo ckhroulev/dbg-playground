@@ -1,7 +1,7 @@
 #include "drainagebasin.hh"
-#include <vector>
 #include <cmath>
 #include <deque>
+#include <map>
 
 using namespace std;
 
@@ -100,7 +100,7 @@ int streamline(gsl_odeiv2_system system,
       is.push_front(i_end);
       js.push_front(j_end);
 
-      if (is.size() > 10) {
+      if (is.size() > 100) {
         is.pop_back();
         is.pop_back();
       }
@@ -108,18 +108,25 @@ int streamline(gsl_odeiv2_system system,
 
   }
 
-  int result = 0;
+  map<int,int> values;
 
   // trace the streamline back:
-  for (int k = is.size(); k >= 0; --k) {
-    i_end = is[k];
-    j_end = js[k];
+  for (int k = 0; k < is.size(); ++k) {
+    int value = gsl_matrix_get(m, is[k], js[k]);
 
-    double end_mask_value = gsl_matrix_get(m, i_end, j_end);
+    if (value > 0) {
+      values[value]++;
+    }
+  }
 
-    if (end_mask_value > 0) {
-      result = end_mask_value;
-      break;
+  int result = 0;
+  int n = 0;
+
+  map<int,int>::iterator k;
+  for (k = values.begin(); k != values.end(); ++k) {
+    if (k->second > n) {
+      n = k->second;
+      result = k->first;
     }
   }
 

@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
   init_mask(X.size(), Y.size(), &Z[0], &thk[0], mask, new_mask);
 
   int remaining, pass_counter = 1;
-  double elevation_step = 500,
+  double elevation_step = 50,
     min_elevation = 0, max_elevation = elevation_step;
   do {
     remaining = 0;

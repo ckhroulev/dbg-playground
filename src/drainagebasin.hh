@@ -3,7 +3,6 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv.h>
-#include <gsl/gsl_interp.h>
 #include <gsl/gsl_math.h>       // GSL_NAN
 
 #include <mpi.h>
@@ -19,8 +18,18 @@ public:
   void evaluate(const double *position, double *elevation, double *thickness,
                 double *f, double *jac);
 
-  int find_cell(const double *position,
-                int &i, int &j);
+  inline int find_cell(const double *position, int &i, int &j) {
+    i = floor((position[0] - x[0]) * one_over_dx);
+    j = floor((position[1] - y[0]) * one_over_dy);
+
+    // bail if we ended up outside the grid
+    if (i < 0 || i + 1 > Mx - 1 || j < 0 || j + 1 > My - 1) {
+      i = j = -1;
+      return 1;
+    }
+
+    return 0;
+  }
 
   double x_min();
   double x_max();
@@ -40,12 +49,28 @@ public:
 protected:
   double *x, *y, *z, *thk;
   int Mx, My;
-  gsl_interp_accel *x_accel, *y_accel;
   double x_spacing, y_spacing, one_over_dx, one_over_dy;
-  int i_last, j_last;
 
-  void get_corner_values(int i, int j, double *data,
-                         double &A, double &B, double &C, double &D);
+  inline void get_corner_values(int i, int j, double *data,
+                                double &A, double &B, double &C, double &D) {
+    // Get the surface elevation at grid corners (arranged like so):
+    //
+    //   ^ y
+    //   |
+    //   |
+    //   B-----C
+    //   |     |
+    //   | *   |   x
+    // --A-----D---->
+    //   |
+    gsl_matrix_view data_view = gsl_matrix_view_array(data, Mx, My);
+    gsl_matrix * m = &data_view.matrix;
+
+    A = gsl_matrix_get(m, i,     j);
+    B = gsl_matrix_get(m, i,     j + 1);
+    C = gsl_matrix_get(m, i + 1, j + 1);
+    D = gsl_matrix_get(m, i + 1, j);
+  }
 };
 
 int function(double t, const double y[], double f[], void* params);

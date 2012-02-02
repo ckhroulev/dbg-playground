@@ -103,7 +103,7 @@ int streamline(gsl_odeiv_system system,
 
       if (is.size() > 20) {
         is.pop_back();
-        is.pop_back();
+        js.pop_back();
       }
     }
 

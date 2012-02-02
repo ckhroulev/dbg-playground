@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
     min_elevation = 0, max_elevation = elevation_step;
   do {
     remaining = 0;
-    fprintf(stderr, "Pass %d: elevation range [%3f, %3f] m...", pass_counter,
+    fprintf(stderr, "Pass %d: elevation range [%4.0f, %4.0f] m...", pass_counter,
             min_elevation, max_elevation);
 
     for (int i = 0; i < X.size(); i++) {
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
       }
     }
 
-    fprintf(stderr, "\tdone; %d cells left.\n", remaining);
+    fprintf(stderr, " done; %d cells left.\n", remaining);
 
     memcpy(mask, new_mask, X.size()*Y.size()*sizeof(double));
 

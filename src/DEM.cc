@@ -3,9 +3,6 @@
 DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My,
          double *my_z, double *my_thk) {
 
-  x_accel = gsl_interp_accel_alloc();
-  y_accel = gsl_interp_accel_alloc();
-
   x  = my_x;
   Mx = my_Mx;
 
@@ -24,8 +21,6 @@ DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My,
 }
 
 DEM::~DEM() {
-  gsl_interp_accel_free(x_accel);
-  gsl_interp_accel_free(y_accel);
 }
 
 double DEM::get_x(int i) {
@@ -66,45 +61,6 @@ int DEM::get_Mx() {
 
 int DEM::get_My() {
   return My;
-}
-
-void DEM::get_corner_values(int i, int j, double *data,
-                            double &A, double &B, double &C, double &D) {
-  // Get the surface elevation at grid corners (arranged as follows):
-  //
-  //   ^ y
-  //   |
-  //   |
-  //   B-----C
-  //   |     |
-  //   | *   |   x
-  // --A-----D---->
-  //   |
-  gsl_matrix_view data_view = gsl_matrix_view_array(data, Mx, My);
-  gsl_matrix * m = &data_view.matrix;
-
-  A = gsl_matrix_get(m, i,     j);
-  B = gsl_matrix_get(m, i,     j + 1);
-  C = gsl_matrix_get(m, i + 1, j + 1);
-  D = gsl_matrix_get(m, i + 1, j);
-}
-
-int DEM::find_cell(const double position[2],
-                   int &i, int &j) {
-
-  i = gsl_interp_accel_find(x_accel, x, Mx, position[0]);
-  j = gsl_interp_accel_find(y_accel, y, My, position[1]);
-
-  // bail if we ended up outside the grid
-  if (i < 0 || i + 1 > Mx - 1 ||
-      j < 0 || j + 1 > My - 1) {
-
-    i = j = -1;
-
-    return 1;
-  }
-
-  return 0;
 }
 
 void DEM::evaluate(const double *position, double *elevation, double *thickness,

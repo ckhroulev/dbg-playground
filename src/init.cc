@@ -4,11 +4,10 @@
 void init_mask(int Mx, int My,
                double *elevation,
                double *thickness,
-               double *mask) {
+               double *mask,
+               double *tmp) {
 
   memset(mask, 0, Mx*My*sizeof(double));
-
-  double *tmp = new double[Mx * My];
 
   gsl_matrix_view mask_view = gsl_matrix_view_array(mask, Mx, My);
   gsl_matrix * m_mask = &mask_view.matrix;
@@ -138,6 +137,5 @@ void init_mask(int Mx, int My,
     } // inner for loop
   } // outer for loop
 
-  delete[] tmp;
-
+  memset(tmp, 0, Mx*My*sizeof(double));
 }

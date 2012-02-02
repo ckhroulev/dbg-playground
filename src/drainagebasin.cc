@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
   }
 
   // initialize the mask
-  init_mask(X.size(), Y.size(), &Z[0], &thk[0], mask);
+  init_mask(X.size(), Y.size(), &Z[0], &thk[0], mask, new_mask);
 
   for (int k = 0; k < 1; ++k) {
     fprintf(stderr, "Pass %d...", k+1);

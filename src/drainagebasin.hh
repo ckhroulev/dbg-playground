@@ -67,7 +67,8 @@ int write_mask(MPI_Comm com, int rank,
 void init_mask(int Mx, int My,
                double *elevation,
                double *thickness,
-               double *mask);
+               double *mask,
+               double *tmp);
 
 int streamline(gsl_odeiv2_system system,
                gsl_odeiv2_step *step,

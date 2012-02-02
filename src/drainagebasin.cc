@@ -42,10 +42,10 @@ int main(int argc, char **argv) {
 
   DEM *dem = new DEM(&X[0], X.size(), &Y[0], Y.size(), &Z[0], &thk[0]);
 
-  gsl_odeiv2_system system = {function, jacobian, 2, dem};
+  gsl_odeiv_system system = {function, jacobian, 2, dem};
 
-  gsl_odeiv2_step *step = gsl_odeiv2_step_alloc(
-                                                gsl_odeiv2_step_rk2,
+  gsl_odeiv_step *step = gsl_odeiv_step_alloc(
+                                                gsl_odeiv_step_rk2,
                                                 2);
 
   double *mask = new double[X.size() * Y.size()];
@@ -58,15 +58,16 @@ int main(int argc, char **argv) {
   }
 
   // initialize the mask
-  init_mask(X.size(), Y.size(), &Z[0], &thk[0], mask, new_mask);
+  init_mask(X.size(), Y.size(), &thk[0], mask, new_mask);
 
   int remaining, pass_counter = 1;
   double elevation_step = 50,
     min_elevation = 0, max_elevation = elevation_step;
   do {
     remaining = 0;
-    fprintf(stderr, "Pass %d: elevation range [%3.3f, %3.3f] m...", pass_counter,
+    fprintf(stderr, "Pass %d: elevation range [%3f, %3f] m...", pass_counter,
             min_elevation, max_elevation);
+
     for (int i = 0; i < X.size(); i++) {
       for (int j = 0; j < Y.size(); j++) {
         remaining += streamline(system, step, i, j,
@@ -74,7 +75,8 @@ int main(int argc, char **argv) {
                                 mask, new_mask);
       }
     }
-    fprintf(stderr, " done; %d cells left.\n", remaining);
+
+    fprintf(stderr, "\tdone; %d cells left.\n", remaining);
 
     memcpy(mask, new_mask, X.size()*Y.size()*sizeof(double));
 
@@ -86,7 +88,7 @@ int main(int argc, char **argv) {
 
   ierr = write_mask(mpi_comm, mpi_rank, "mask.nc", X, Y, new_mask); CHKERRQ(ierr);
 
-  gsl_odeiv2_step_free (step);
+  gsl_odeiv_step_free (step);
   delete[] mask;
   delete[] new_mask;
   delete dem;

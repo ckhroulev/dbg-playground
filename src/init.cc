@@ -2,7 +2,6 @@
 #include <string.h>
 
 void init_mask(int Mx, int My,
-               double *elevation,
                double *thickness,
                double *mask,
                double *new_mask) {
@@ -14,9 +13,6 @@ void init_mask(int Mx, int My,
 
   gsl_matrix_view tmp_view = gsl_matrix_view_array(new_mask, Mx, My);
   gsl_matrix * m_tmp = &tmp_view.matrix;
-
-  gsl_matrix_view elevation_view = gsl_matrix_view_array(elevation, Mx, My);
-  gsl_matrix * m_elevation = &elevation_view.matrix;
 
   gsl_matrix_view thickness_view = gsl_matrix_view_array(thickness, Mx, My);
   gsl_matrix * m_thickness = &thickness_view.matrix;
@@ -34,16 +30,6 @@ void init_mask(int Mx, int My,
         continue;
       }
 
-      double h = gsl_matrix_get(m_elevation, i, j),
-        h_w = gsl_matrix_get(m_elevation, i - 1, j),
-        h_nw = gsl_matrix_get(m_elevation, i - 1, j + 1),
-        h_n = gsl_matrix_get(m_elevation, i, j + 1),
-        h_ne = gsl_matrix_get(m_elevation, i + 1, j + 1),
-        h_e = gsl_matrix_get(m_elevation, i + 1, j),
-        h_se = gsl_matrix_get(m_elevation, i + 1, j - 1),
-        h_s = gsl_matrix_get(m_elevation, i, j - 1),
-        h_sw = gsl_matrix_get(m_elevation, i - 1, j - 1);
-
       double thk = gsl_matrix_get(m_thickness, i, j),
         thk_w = gsl_matrix_get(m_thickness, i - 1, j),
         thk_nw = gsl_matrix_get(m_thickness, i - 1, j + 1),
@@ -60,25 +46,15 @@ void init_mask(int Mx, int My,
         if (thk_w <= thk_eps || thk_nw <= thk_eps || thk_n <= thk_eps || thk_ne <= thk_eps ||
             thk_e <= thk_eps || thk_se <= thk_eps || thk_s <= thk_eps || thk_sw <= thk_eps) {
           // ice margin
-
-          if (h_w <= h || h_nw <= h || h_n <= h || h_ne <= h ||
-              h_e <= h || h_se <= h || h_s <= h || h_sw <= h) {
-            // there is an ice-free cell next to the current cell with the same or
-            // lower elevation
-            gsl_matrix_set(m_tmp, i, j, ++marker);
-          } else {
-            // ice margin next to a mountain
-            gsl_matrix_set(m_tmp, i, j, -2);
-          }
-
+          gsl_matrix_set(m_tmp, i, j, ++marker);
         } else {
           // interior ice
-          gsl_matrix_set(m_tmp, i, j, -3);
+          gsl_matrix_set(m_tmp, i, j, -1);
         }
 
       } else {
         // ice-free
-        gsl_matrix_set(m_tmp, i, j, -4);
+        gsl_matrix_set(m_tmp, i, j, -2);
       }
 
 

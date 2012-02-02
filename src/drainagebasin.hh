@@ -2,7 +2,7 @@
 // GSL stuff
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_matrix.h>
-#include <gsl/gsl_odeiv2.h>
+#include <gsl/gsl_odeiv.h>
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_math.h>       // GSL_NAN
 
@@ -65,13 +65,12 @@ int write_mask(MPI_Comm com, int rank,
                double *Z);
 
 void init_mask(int Mx, int My,
-               double *elevation,
                double *thickness,
                double *mask,
                double *tmp);
 
-int streamline(gsl_odeiv2_system system,
-               gsl_odeiv2_step *step,
+int streamline(gsl_odeiv_system system,
+               gsl_odeiv_step *step,
                int i, int j,
                double min_elevation,
                double max_elevation,

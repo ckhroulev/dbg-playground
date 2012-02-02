@@ -26,8 +26,8 @@ int jacobian(double t, const double y[],  // inputs
   return GSL_SUCCESS;
 }
 
-int streamline(gsl_odeiv2_system system,
-               gsl_odeiv2_step *step,
+int streamline(gsl_odeiv_system system,
+               gsl_odeiv_step *step,
                int i_start, int j_start,
                double min_elevation,
                double max_elevation,
@@ -46,8 +46,9 @@ int streamline(gsl_odeiv2_system system,
   if (gsl_matrix_get(m, i_start, j_start) > 0)
     return 0;
 
-  int counter, steps_per_cell = 10.0,
-    n_max = (dem->get_Mx() + dem->get_My()) * steps_per_cell,
+  int counter,
+    steps_per_cell = 10.0,
+    n_max = (dem->get_Mx() + dem->get_My()) * steps_per_cell * 10,
     i_end = 0, j_end = 0, status;
 
   double grid_spacing = dem->dx() < dem->dy() ? dem->dx() : dem->dy(),
@@ -84,7 +85,7 @@ int streamline(gsl_odeiv2_system system,
     step_size = (grid_spacing / steps_per_cell) / gradient_magnitude;
 
     // take a step
-    status = gsl_odeiv2_step_apply(step,
+    status = gsl_odeiv_step_apply(step,
                                    0,         // starting time (irrelevant)
                                    step_size, // step size
                                    position, err, NULL, NULL, &system);
@@ -100,7 +101,7 @@ int streamline(gsl_odeiv2_system system,
       is.push_front(i_end);
       js.push_front(j_end);
 
-      if (is.size() > 100) {
+      if (is.size() > 20) {
         is.pop_back();
         is.pop_back();
       }
@@ -110,13 +111,12 @@ int streamline(gsl_odeiv2_system system,
 
   map<int,int> values;
 
-  // trace the streamline back:
+  // Find the mask value most common along the streamline
   for (int k = 0; k < is.size(); ++k) {
     int value = gsl_matrix_get(m, is[k], js[k]);
 
-    if (value > 0) {
+    if (value > 0)
       values[value]++;
-    }
   }
 
   int result = 0;

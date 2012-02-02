@@ -48,17 +48,9 @@ int main(int argc, char **argv) {
                                                 gsl_odeiv2_step_rk2,
                                                 2);
 
-  // Set up the plot window (pipe this through gnuplot):
-  // printf("set xrange [%f:%f];\n"
-  //        "set yrange [%f:%f]\n"
-  //        "set size ratio %f;\n"
-  //        "set format xy \"\"\n"
-  //        "set multiplot\n",
-  //        X.front(), X.back(),
-  //        Y.front(), Y.back(),
-  //        (Y.back() - Y.front()) / (X.back() - X.front()));
-
   double *mask = new double[X.size() * Y.size()];
+  double *new_mask = new double[X.size() * Y.size()];
+
   if (mask == NULL) {
     printf("Memory allocation failed.\n");
     MPI_Finalize();
@@ -66,20 +58,23 @@ int main(int argc, char **argv) {
   }
 
   // initialize the mask
-  
+  init_mask(X.size(), Y.size(), &Z[0], &thk[0], mask);
 
-  int k = 1;
-  bool new_terminus = false;
-  for (int i = 0; i < X.size(); i++) {
-    for (int j = 0; j < Y.size(); j++) {
-      streamline(system, step, i, j, mask);
+  for (int k = 0; k < 1; ++k) {
+    fprintf(stderr, "Pass %d...", k+1);
+    for (int i = 0; i < X.size(); i++) {
+      for (int j = 0; j < Y.size(); j++) {
+        streamline(system, step, i, j, mask, new_mask);
+      }
     }
+    fprintf(stderr, " done.\n");
   }
 
-  ierr = write_mask(mpi_comm, mpi_rank, "mask.nc", X, Y, mask); CHKERRQ(ierr);
+  ierr = write_mask(mpi_comm, mpi_rank, "mask.nc", X, Y, new_mask); CHKERRQ(ierr);
 
   gsl_odeiv2_step_free (step);
   delete[] mask;
+  delete[] new_mask;
   delete dem;
 
   /* Shut down MPI. */

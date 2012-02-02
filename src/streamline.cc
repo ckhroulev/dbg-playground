@@ -1,6 +1,5 @@
 #include "drainagebasin.hh"
 #include <cmath>
-#include <deque>
 #include <map>
 
 using namespace std;
@@ -34,7 +33,7 @@ int streamline(gsl_odeiv_system system,
                double *old_mask, double *new_mask) {
   DEM *dem = (DEM*)system.params;
 
-  deque<int> is, js;
+  map<int,int> values;
 
   gsl_matrix_view old_mask_view = gsl_matrix_view_array(old_mask, dem->get_Mx(), dem->get_My());
   gsl_matrix * m = &old_mask_view.matrix;
@@ -46,10 +45,10 @@ int streamline(gsl_odeiv_system system,
   if (gsl_matrix_get(m, i_start, j_start) > 0)
     return 0;
 
-  int counter,
+  int counter, mask_counter = 0,
     steps_per_cell = 10.0,
     n_max = (dem->get_Mx() + dem->get_My()) * steps_per_cell * 10,
-    i_end = 0, j_end = 0, status;
+    i = 0, j = 0, i_old, j_old, status;
 
   double grid_spacing = dem->dx() < dem->dy() ? dem->dx() : dem->dy(),
     position[2], err[2];
@@ -70,11 +69,25 @@ int streamline(gsl_odeiv_system system,
 
   for (counter = 0; counter < n_max; ++counter) {
 
-    if (position[0] <= dem->x_min() || position[0] >= dem->x_max() ||
-        position[1] <= dem->y_min() || position[1] >= dem->y_max())
+    i_old = i; j_old = j;
+    status = dem->find_cell(position, i, j);
+
+    if (status != 0)
       break;
 
-    dem->evaluate(position, &elevation, &thickness, gradient, NULL);
+    if (i != i_old || j != j_old) {
+      int value = gsl_matrix_get(m, i, j);
+
+      if (value > 0) {
+        values[value]++;
+        mask_counter++;
+      }
+
+      if (mask_counter == 100)
+        break;
+    }
+
+    dem->evaluate(position, NULL, &thickness, gradient, NULL);
 
     gradient_magnitude = sqrt(gradient[0]*gradient[0] + gradient[1]*gradient[1]);
 
@@ -86,39 +99,19 @@ int streamline(gsl_odeiv_system system,
 
     // take a step
     status = gsl_odeiv_step_apply(step,
-                                   0,         // starting time (irrelevant)
-                                   step_size, // step size
-                                   position, err, NULL, NULL, &system);
+                                  0,         // starting time (irrelevant)
+                                  step_size, // step size
+                                  position, err, NULL, NULL, &system);
 
     if (status != GSL_SUCCESS) {
       printf ("error, return value=%d\n", status);
       break;
     }
 
-    status = dem->find_cell(position, i_end, j_end);
-
-    if (status == 0) {
-      is.push_front(i_end);
-      js.push_front(j_end);
-
-      if (is.size() > 20) {
-        is.pop_back();
-        js.pop_back();
-      }
-    }
 
   }
 
-  map<int,int> values;
-
-  // Find the mask value most common along the streamline
-  for (int k = 0; k < is.size(); ++k) {
-    int value = gsl_matrix_get(m, is[k], js[k]);
-
-    if (value > 0)
-      values[value]++;
-  }
-
+  // Find the mask value that appears more often than others.
   int result = 0;
   int n = 0;
 

@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
     min_elevation = 0, max_elevation = elevation_step;
   do {
     remaining = 0;
-    fprintf(stderr, "Pass %d: elevation range [%4.0f, %4.0f] m...", pass_counter,
+    fprintf(stderr, "Pass %03d: elevation range [%4.0f, %4.0f] m...", pass_counter,
             min_elevation, max_elevation);
 
     for (int i = 0; i < X.size(); i++) {

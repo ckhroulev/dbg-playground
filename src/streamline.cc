@@ -29,6 +29,8 @@ int jacobian(double t, const double y[],  // inputs
 int streamline(gsl_odeiv2_system system,
                gsl_odeiv2_step *step,
                int i_start, int j_start,
+               double min_elevation,
+               double max_elevation,
                double *old_mask, double *new_mask) {
   DEM *dem = (DEM*)system.params;
 
@@ -44,7 +46,7 @@ int streamline(gsl_odeiv2_system system,
   if (gsl_matrix_get(m, i_start, j_start) > 0)
     return 0;
 
-  int steps_per_cell = 10.0,
+  int counter, steps_per_cell = 10.0,
     n_max = (dem->get_Mx() + dem->get_My()) * steps_per_cell,
     i_end = 0, j_end = 0, status;
 
@@ -54,19 +56,24 @@ int streamline(gsl_odeiv2_system system,
   position[0] = dem->get_x(i_start) + dem->dx() * 0.5;
   position[1] = dem->get_y(j_start) + dem->dy() * 0.5;
 
-  double gradient[2], thickness, gradient_magnitude, step_size;
-  dem->evaluate(position, NULL, &thickness, NULL, NULL);
+  double gradient[2], thickness, elevation, gradient_magnitude, step_size;
+  dem->evaluate(position, &elevation, &thickness, NULL, NULL);
 
-  if (thickness < 10)
+  // if there is no ice or we're below the minimum elevation, we're done
+  if (thickness < 1 || elevation < min_elevation)
     return 0;
 
-  for (int counter = 0; counter < n_max; ++counter) {
+  // if we're above the maximum elevation, wait.
+  if (elevation > max_elevation)
+    return 1;
+
+  for (counter = 0; counter < n_max; ++counter) {
 
     if (position[0] <= dem->x_min() || position[0] >= dem->x_max() ||
         position[1] <= dem->y_min() || position[1] >= dem->y_max())
       break;
 
-    dem->evaluate(position, NULL, &thickness, gradient, NULL);
+    dem->evaluate(position, &elevation, &thickness, gradient, NULL);
 
     gradient_magnitude = sqrt(gradient[0]*gradient[0] + gradient[1]*gradient[1]);
 
@@ -93,7 +100,7 @@ int streamline(gsl_odeiv2_system system,
       is.push_front(i_end);
       js.push_front(j_end);
 
-      if (is.size() > 5) {
+      if (is.size() > 10) {
         is.pop_back();
         is.pop_back();
       }
@@ -101,10 +108,10 @@ int streamline(gsl_odeiv2_system system,
 
   }
 
-  int result = -5;
+  int result = 0;
 
   // trace the streamline back:
-  for (int k = 0; k < is.size(); ++k) {
+  for (int k = is.size(); k >= 0; --k) {
     i_end = is[k];
     j_end = js[k];
 
@@ -117,6 +124,9 @@ int streamline(gsl_odeiv2_system system,
   }
 
   gsl_matrix_set(o, i_start, j_start, result);
+
+  if (result == 0)
+    return 1;
 
   return 0;
 }

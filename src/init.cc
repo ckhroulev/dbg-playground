@@ -5,14 +5,14 @@ void init_mask(int Mx, int My,
                double *elevation,
                double *thickness,
                double *mask,
-               double *tmp) {
+               double *new_mask) {
 
   memset(mask, 0, Mx*My*sizeof(double));
 
   gsl_matrix_view mask_view = gsl_matrix_view_array(mask, Mx, My);
   gsl_matrix * m_mask = &mask_view.matrix;
 
-  gsl_matrix_view tmp_view = gsl_matrix_view_array(tmp, Mx, My);
+  gsl_matrix_view tmp_view = gsl_matrix_view_array(new_mask, Mx, My);
   gsl_matrix * m_tmp = &tmp_view.matrix;
 
   gsl_matrix_view elevation_view = gsl_matrix_view_array(elevation, Mx, My);
@@ -137,5 +137,5 @@ void init_mask(int Mx, int My,
     } // inner for loop
   } // outer for loop
 
-  memset(tmp, 0, Mx*My*sizeof(double));
+  memcpy(new_mask, mask, Mx*My*sizeof(double));
 }

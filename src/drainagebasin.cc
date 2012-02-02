@@ -60,15 +60,29 @@ int main(int argc, char **argv) {
   // initialize the mask
   init_mask(X.size(), Y.size(), &Z[0], &thk[0], mask, new_mask);
 
-  for (int k = 0; k < 1; ++k) {
-    fprintf(stderr, "Pass %d...", k+1);
+  int remaining, pass_counter = 1;
+  double elevation_step = 500,
+    min_elevation = 0, max_elevation = elevation_step;
+  do {
+    remaining = 0;
+    fprintf(stderr, "Pass %d: elevation range [%3.3f, %3.3f] m...", pass_counter,
+            min_elevation, max_elevation);
     for (int i = 0; i < X.size(); i++) {
       for (int j = 0; j < Y.size(); j++) {
-        streamline(system, step, i, j, mask, new_mask);
+        remaining += streamline(system, step, i, j,
+                                min_elevation, max_elevation,
+                                mask, new_mask);
       }
     }
-    fprintf(stderr, " done.\n");
-  }
+    fprintf(stderr, " done; %d cells left.\n", remaining);
+
+    memcpy(mask, new_mask, X.size()*Y.size()*sizeof(double));
+
+    min_elevation = max_elevation;
+    max_elevation += elevation_step;
+
+    pass_counter++;
+  } while (remaining > 0 && min_elevation < 4000);
 
   ierr = write_mask(mpi_comm, mpi_rank, "mask.nc", X, Y, new_mask); CHKERRQ(ierr);
 

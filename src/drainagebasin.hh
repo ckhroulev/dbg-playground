@@ -73,5 +73,7 @@ void init_mask(int Mx, int My,
 int streamline(gsl_odeiv2_system system,
                gsl_odeiv2_step *step,
                int i, int j,
+               double min_elevation,
+               double max_elevation,
                double *mask,
                double *output);

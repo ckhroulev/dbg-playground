@@ -10,11 +10,10 @@ using namespace std;
 
 class DEM {
 public:
-  DEM(double *x, int Mx, double *y, int My, double *z, double *thickness);
+  DEM(double *x, int Mx, double *y, int My, double *z);
   ~DEM();
 
-  void evaluate(const double *position, double *elevation, double *thickness,
-                double *f, double *jac);
+  void evaluate(const double *position, double *elevation, double *f);
 
   inline int find_cell(const double *position, int &i, int &j) {
     i = floor((position[0] - x[0]) * one_over_dx);
@@ -45,7 +44,7 @@ public:
   int get_My();
 
 protected:
-  double *x, *y, *z, *thk;
+  double *x, *y, *z;
   int Mx, My;
   double x_spacing, y_spacing, one_over_dx, one_over_dy;
 
@@ -69,7 +68,6 @@ protected:
 };
 
 int function(double t, const double y[], double f[], void* params);
-int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *params);
 
 int read_dem(MPI_Comm com, int rank,
              const char *filename,

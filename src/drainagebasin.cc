@@ -40,9 +40,9 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  DEM *dem = new DEM(&X[0], X.size(), &Y[0], Y.size(), &Z[0], &thk[0]);
+  DEM *dem = new DEM(&X[0], X.size(), &Y[0], Y.size(), &Z[0]);
 
-  gsl_odeiv_system system = {function, jacobian, 2, dem};
+  gsl_odeiv_system system = {function, NULL, 2, dem};
 
   gsl_odeiv_step *step = gsl_odeiv_step_alloc(
                                                 gsl_odeiv_step_rkf45,
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
     max_elevation += elevation_step;
 
     pass_counter++;
-  } while (remaining > 0 && min_elevation < 4000);
+  } while (remaining > 0);
 
   ierr = write_mask(mpi_comm, mpi_rank, "mask.nc", X, Y, new_mask); CHKERRQ(ierr);
 

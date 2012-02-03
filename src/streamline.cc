@@ -8,19 +8,7 @@ int function(double t, const double y[], // inputs
              double f[],                 // output
              void* params) {
 
-  ((DEM*)params)->evaluate(y, NULL, NULL, f, NULL);
-
-  return GSL_SUCCESS;
-}
-
-int jacobian(double t, const double y[],  // inputs
-             double *dfdy, double dfdt[], // outputs
-             void *params) {
-
-  ((DEM*)params)->evaluate(y, NULL, NULL, NULL, dfdy);
-
-  dfdt[0] = 0;
-  dfdt[1] = 0;
+  ((DEM*)params)->evaluate(y, NULL, f);
 
   return GSL_SUCCESS;
 }
@@ -33,12 +21,6 @@ int streamline(gsl_odeiv_system system,
                double *old_mask, double *new_mask) {
   DEM *dem = (DEM*)system.params;
 
-  map<int,int> values;
-
-  // stop if the current cell already has a value assigned
-  if (old_mask[i_start * dem->get_My() + j_start] > 0)
-    return 0;
-
   int counter, mask_counter = 0,
     steps_per_cell = 1.0,
     n_max = (dem->get_Mx() + dem->get_My()) * steps_per_cell * 10,
@@ -47,14 +29,22 @@ int streamline(gsl_odeiv_system system,
   double grid_spacing = dem->dx() < dem->dy() ? dem->dx() : dem->dy(),
     position[2], err[2];
 
+  double gradient[2], elevation, gradient_magnitude, step_size;
+
+  map<int,int> values;
+
+  // stop if the current cell already has a value assigned
+  if (old_mask[i_start * dem->get_My() + j_start] > 0 ||
+      old_mask[i_start * dem->get_My() + j_start] == -2)
+    return 0;
+
   position[0] = dem->get_x(i_start) + dem->dx() * 0.5;
   position[1] = dem->get_y(j_start) + dem->dy() * 0.5;
 
-  double gradient[2], thickness, elevation, gradient_magnitude, step_size;
-  dem->evaluate(position, &elevation, &thickness, NULL, NULL);
+  dem->evaluate(position, &elevation, NULL);
 
   // if there is no ice or we're below the minimum elevation, we're done
-  if (thickness < 1 || elevation < min_elevation)
+  if (elevation < min_elevation)
     return 0;
 
   // if we're above the maximum elevation, wait.
@@ -69,25 +59,22 @@ int streamline(gsl_odeiv_system system,
     if (status != 0)
       break;
 
-    if (i != i_old || j != j_old) {
-      int value = old_mask[i * dem->get_My() + j];
+    int old_mask_value = old_mask[i * dem->get_My() + j];
 
-      if (value > 0) {
-        values[value]++;
-        mask_counter++;
-      }
+    if (old_mask_value == -2)   // ice-free
+      break;
+
+    if ((i != i_old || j != j_old) && (old_mask_value > 0)) {
+      values[old_mask_value]++;
+      mask_counter++;
 
       if (mask_counter == 5)
         break;
     }
 
-    dem->evaluate(position, NULL, &thickness, gradient, NULL);
+    dem->evaluate(position, NULL, gradient);
 
     gradient_magnitude = sqrt(gradient[0]*gradient[0] + gradient[1]*gradient[1]);
-
-    // Stop if the ice thickness is small
-    if (thickness < 1)
-      break;
 
     step_size = (grid_spacing / steps_per_cell) / gradient_magnitude;
 

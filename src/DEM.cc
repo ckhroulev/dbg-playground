@@ -1,7 +1,7 @@
 #include "drainagebasin.hh"
 
 DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My,
-         double *my_z, double *my_thk) {
+         double *my_z) {
 
   x  = my_x;
   Mx = my_Mx;
@@ -10,7 +10,6 @@ DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My,
   My = my_My;
 
   z   = my_z;
-  thk = my_thk;
 
   // We assume that the grid is uniform.
   x_spacing = x[1] - x[0];
@@ -63,8 +62,7 @@ int DEM::get_My() {
   return My;
 }
 
-void DEM::evaluate(const double *position, double *elevation, double *thickness,
-                   double *f, double *jac) {
+void DEM::evaluate(const double *position, double *elevation, double *f) {
   int ierr, i, j;
   double A, B, C, D, delta_x, delta_y;
 
@@ -77,14 +75,8 @@ void DEM::evaluate(const double *position, double *elevation, double *thickness,
     if (elevation != NULL)
       *elevation = 0;
 
-    if (thickness != NULL)
-      *thickness = 0;
-
     if (f != NULL)
       f[0] = f[1] = 0;
-
-    if (jac != NULL)
-      jac[0] = jac[1] = jac[2] = jac[3] = 0;
 
     return;
   }
@@ -112,24 +104,6 @@ void DEM::evaluate(const double *position, double *elevation, double *thickness,
   if (f != NULL) {
     f[0] = -((D - A) * one_over_dx + delta_x * gamma);
     f[1] = -((B - A) * one_over_dy + delta_y * gamma);
-  }
-
-  // the jacobian of the above
-  if (jac != NULL) {
-    jac[0 * 2 + 0] = 0;
-    jac[0 * 2 + 1] = -gamma;
-    jac[1 * 2 + 0] = -gamma;
-    jac[1 * 2 + 1] = 0;
-  }
-
-  // ice thickness
-  if (thickness != NULL) {
-    this->get_corner_values(i, j, thk, A, B, C, D);
-
-    *thickness = ( (1 - alpha) * (1 - beta) * A +
-                   (1 - alpha) *      beta  * B +
-                   alpha       *      beta  * C +
-                   alpha       * (1 - beta) * D );
   }
 
 } // end of DEM::evaluate()

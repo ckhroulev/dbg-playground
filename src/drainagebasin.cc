@@ -71,7 +71,10 @@ int main(int argc, char **argv) {
     for (int i = 0; i < X.size(); i++) {
       for (int j = 0; j < Y.size(); j++) {
         remaining += streamline(system, step, i, j,
-                                min_elevation, max_elevation,
+                                2, // 2 steps per cell
+                                5, // visit 5 "assigned" cells
+                                min_elevation,
+                                max_elevation,
                                 mask, new_mask);
       }
     }

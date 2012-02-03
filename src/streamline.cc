@@ -16,14 +16,15 @@ int function(double t, const double y[], // inputs
 int streamline(gsl_odeiv_system system,
                gsl_odeiv_step *step,
                int i_start, int j_start,
+               int steps_per_cell,
+               int path_length,
                double min_elevation,
                double max_elevation,
                double *old_mask, double *new_mask) {
   DEM *dem = (DEM*)system.params;
 
   int counter, mask_counter = 0,
-    steps_per_cell = 1.0,
-    n_max = (dem->get_Mx() + dem->get_My()) * steps_per_cell * 10,
+    n_max = (dem->get_Mx() + dem->get_My()) * steps_per_cell,
     i = 0, j = 0, i_old, j_old, status;
 
   double grid_spacing = dem->dx() < dem->dy() ? dem->dx() : dem->dy(),
@@ -68,7 +69,7 @@ int streamline(gsl_odeiv_system system,
       values[old_mask_value]++;
       mask_counter++;
 
-      if (mask_counter == 5)
+      if (mask_counter == path_length)
         break;
     }
 

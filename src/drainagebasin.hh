@@ -1,12 +1,10 @@
-
 // GSL stuff
 #include <gsl/gsl_errno.h>
-#include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv.h>
-#include <gsl/gsl_math.h>       // GSL_NAN
 
 #include <mpi.h>
 #include <vector>
+#include <cmath>
 
 using namespace std;
 
@@ -63,13 +61,10 @@ protected:
     //   | *   |   x
     // --A-----D---->
     //   |
-    gsl_matrix_view data_view = gsl_matrix_view_array(data, Mx, My);
-    gsl_matrix * m = &data_view.matrix;
-
-    A = gsl_matrix_get(m, i,     j);
-    B = gsl_matrix_get(m, i,     j + 1);
-    C = gsl_matrix_get(m, i + 1, j + 1);
-    D = gsl_matrix_get(m, i + 1, j);
+    A = data[(i    ) * My + (j    )];
+    B = data[(i    ) * My + (j + 1)];
+    C = data[(i + 1) * My + (j + 1)];
+    D = data[(i + 1) * My + (j    )];
   }
 };
 

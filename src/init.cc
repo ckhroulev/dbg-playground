@@ -1,6 +1,8 @@
 #include "drainagebasin.hh"
 #include <string.h>
 
+#include <gsl/gsl_matrix.h>
+
 void init_mask(int Mx, int My,
                double *thickness,
                double *mask,

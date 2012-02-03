@@ -35,14 +35,8 @@ int streamline(gsl_odeiv_system system,
 
   map<int,int> values;
 
-  gsl_matrix_view old_mask_view = gsl_matrix_view_array(old_mask, dem->get_Mx(), dem->get_My());
-  gsl_matrix * m = &old_mask_view.matrix;
-
-  gsl_matrix_view new_mask_view = gsl_matrix_view_array(new_mask, dem->get_Mx(), dem->get_My());
-  gsl_matrix * o = &new_mask_view.matrix;
-
   // stop if the current cell already has a value assigned
-  if (gsl_matrix_get(m, i_start, j_start) > 0)
+  if (old_mask[i_start * dem->get_My() + j_start] > 0)
     return 0;
 
   int counter, mask_counter = 0,
@@ -76,7 +70,7 @@ int streamline(gsl_odeiv_system system,
       break;
 
     if (i != i_old || j != j_old) {
-      int value = gsl_matrix_get(m, i, j);
+      int value = old_mask[i * dem->get_My() + j];
 
       if (value > 0) {
         values[value]++;
@@ -123,7 +117,7 @@ int streamline(gsl_odeiv_system system,
     }
   }
 
-  gsl_matrix_set(o, i_start, j_start, result);
+  new_mask[i_start * dem->get_My() + j_start] = result;
 
   if (result == 0)
     return 1;

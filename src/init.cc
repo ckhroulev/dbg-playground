@@ -62,8 +62,14 @@ void init_mask(int Mx, int My,
   } // outer for loop
 
   // second pass
-  for (int i = 1; i < Mx-1; ++i) {
-    for (int j = 1; j < My-1; ++j) {
+  for (int i = 0; i < Mx; ++i) {
+    for (int j = 0; j < My; ++j) {
+
+      if (i == 0 || i == Mx - 1 ||
+          j == 0 || j == My - 1) {
+        gsl_matrix_set(m_mask, i, j, gsl_matrix_get(m_tmp, i, j));
+        continue;
+      }
 
       double m = gsl_matrix_get(m_tmp, i, j),
         mask_w = gsl_matrix_get(m_tmp, i - 1, j),

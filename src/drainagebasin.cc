@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
   double *mask = new double[X.size() * Y.size()];
   double *new_mask = new double[X.size() * Y.size()];
 
-  if (mask == NULL) {
+  if (mask == NULL || new_mask == NULL) {
     printf("Memory allocation failed.\n");
     MPI_Finalize();
     return 1;

@@ -40,7 +40,7 @@ int streamline(gsl_odeiv_system system,
     return 0;
 
   int counter, mask_counter = 0,
-    steps_per_cell = 10.0,
+    steps_per_cell = 1.0,
     n_max = (dem->get_Mx() + dem->get_My()) * steps_per_cell * 10,
     i = 0, j = 0, i_old, j_old, status;
 
@@ -77,7 +77,7 @@ int streamline(gsl_odeiv_system system,
         mask_counter++;
       }
 
-      if (mask_counter == 100)
+      if (mask_counter == 5)
         break;
     }
 
@@ -102,8 +102,7 @@ int streamline(gsl_odeiv_system system,
       break;
     }
 
-
-  }
+  } // time-stepping loop (counter)
 
   // Find the mask value that appears more often than others.
   int result = 0;

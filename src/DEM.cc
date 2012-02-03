@@ -22,46 +22,6 @@ DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My,
 DEM::~DEM() {
 }
 
-double DEM::get_x(int i) {
-  return x[i];
-}
-
-double DEM::get_y(int j) {
-  return y[j];
-}
-
-double DEM::x_min() {
-  return x[0];
-}
-
-double DEM::x_max() {
-  return x[Mx-1];
-}
-
-double DEM::y_min() {
-  return y[0];
-}
-
-double DEM::y_max() {
-  return y[My-1];
-}
-
-double DEM::dx() {
-  return x_spacing;
-}
-
-double DEM::dy() {
-  return y_spacing;
-}
-
-int DEM::get_Mx() {
-  return Mx;
-}
-
-int DEM::get_My() {
-  return My;
-}
-
 void DEM::evaluate(const double *position, double *elevation, double *f) {
   int ierr, i, j;
   double A, B, C, D, delta_x, delta_y;

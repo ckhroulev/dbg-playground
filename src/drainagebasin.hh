@@ -28,20 +28,35 @@ public:
     return 0;
   }
 
-  double x_min();
-  double x_max();
+  inline double get_x(int i)
+  { return x[i]; }
 
-  double y_min();
-  double y_max();
+  inline double get_y(int j)
+  { return y[j]; }
 
-  double dx();
-  double dy();
+  inline double x_min()
+  { return x[0]; }
 
-  double get_x(int i);
-  double get_y(int j);
+  inline double x_max()
+  { return x[Mx-1]; }
 
-  int get_Mx();
-  int get_My();
+  inline double y_min()
+  { return y[0]; }
+
+  inline double y_max()
+  { return y[My-1]; }
+
+  inline double dx()
+  { return x_spacing; }
+
+  inline double dy()
+  { return y_spacing; }
+
+  inline int get_Mx()
+  { return Mx; }
+
+  inline int get_My()
+  { return My; }
 
 protected:
   double *x, *y, *z;

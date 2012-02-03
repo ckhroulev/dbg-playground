@@ -61,18 +61,18 @@ int main(int argc, char **argv) {
   init_mask(X.size(), Y.size(), &thk[0], mask, new_mask);
 
   int remaining, pass_counter = 1;
-  double elevation_step = 50,
+  double elevation_step = 10,
     min_elevation = 0, max_elevation = elevation_step;
   do {
     remaining = 0;
-    fprintf(stderr, "Pass %03d: elevation range [%4.0f, %4.0f] m...", pass_counter,
+    fprintf(stderr, "Pass %04d: elevation range [%4.0f, %4.0f] m...", pass_counter,
             min_elevation, max_elevation);
 
     for (int i = 0; i < X.size(); i++) {
       for (int j = 0; j < Y.size(); j++) {
         remaining += streamline(system, step, i, j,
-                                2, // 2 steps per cell
-                                5, // visit 5 "assigned" cells
+                                2, // steps per cell
+                                5, // visit this many "assigned" cells
                                 min_elevation,
                                 max_elevation,
                                 mask, new_mask);

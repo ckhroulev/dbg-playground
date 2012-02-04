@@ -5,8 +5,8 @@ int read_dem(MPI_Comm com, int rank,
              const char *filename,
              vector<double> &X,
              vector<double> &Y,
-             vector<double> &Z,
-             vector<double> &thk) {
+             double **thk,
+             Node **data) {
 
   int ierr;
   unsigned int Mx, My;
@@ -52,6 +52,13 @@ int read_dem(MPI_Comm com, int rank,
   if (ierr != NC_NOERR) {
     printf("Can't read the 'y' variable.\n");
     ierr = nc.close();
+    return 1;
+  }
+
+  *data = new Node[X.size() * Y.size() * sizeof(Node)];
+  *thk = new double[X.size() * Y.size()];
+
+  if (*data == NULL || *thk == NULL) {
     return 1;
   }
 
@@ -134,7 +141,7 @@ int write_mask(MPI_Comm com, int rank,
   dims.resize(2);
   dims[0] = "y";
   dims[1] = "x";
-  ierr = nc.def_var("mask", NC_DOUBLE, dims);
+  ierr = nc.def_var("mask", NC_INT, dims);
   if (ierr != NC_NOERR) {
     printf("Can't create the 'mask' variable.\n");
     ierr = nc.close();

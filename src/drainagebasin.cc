@@ -30,35 +30,28 @@ int main(int argc, char **argv) {
 
   printf("# mpi_name: %s size: %d rank: %d\n", mpi_name, mpi_size, mpi_rank);
 
-  vector<double> X, Y,          // coordinates
-    Z, thk;                     // elevation, interpreted as a 2D array
+  vector<double> X, Y;          // coordinates
+  double *thk;
+  Node *data;
 
-  ierr = read_dem(mpi_comm, mpi_rank, "dem.nc", X, Y, Z, thk);
+  ierr = read_dem(mpi_comm, mpi_rank, "dem.nc", X, Y, &thk, &data);
   if (ierr != 0) {
     printf("Initialization failed.\n");
     MPI_Finalize();
     return 1;
   }
 
-  DEM *dem = new DEM(&X[0], X.size(), &Y[0], Y.size(), &Z[0]);
+  // initialize the mask
+  init_mask(X.size(), Y.size(), thk, data);
+
+  delete[] thk;
+
+  DEM *dem = new DEM(&X[0], X.size(), &Y[0], Y.size(), data);
 
   gsl_odeiv_system system = {function, NULL, 2, dem};
+  gsl_odeiv_step *step = gsl_odeiv_step_alloc(gsl_odeiv_step_rkf45, 2);
 
-  gsl_odeiv_step *step = gsl_odeiv_step_alloc(
-                                                gsl_odeiv_step_rkf45,
-                                                2);
-
-  double *mask = new double[X.size() * Y.size()];
-  double *new_mask = new double[X.size() * Y.size()];
-
-  if (mask == NULL || new_mask == NULL) {
-    printf("Memory allocation failed.\n");
-    MPI_Finalize();
-    return 1;
-  }
-
-  // initialize the mask
-  init_mask(X.size(), Y.size(), &thk[0], mask, new_mask);
+  // the main loop
 
   int remaining, pass_counter = 1;
   double elevation_step = 10,
@@ -75,15 +68,14 @@ int main(int argc, char **argv) {
                                 2, // steps per cell
                                 5, // visit this many "assigned" cells
                                 min_elevation,
-                                max_elevation,
-                                mask, new_mask);
+                                max_elevation);
 
       }
     }
 
     fprintf(stderr, " done; %d cells left.\n", remaining);
 
-    memcpy(mask, new_mask, X.size()*Y.size()*sizeof(double));
+    swap_mask(X.size(), Y.size(), data);
 
     min_elevation = max_elevation;
     max_elevation += elevation_step;
@@ -91,11 +83,11 @@ int main(int argc, char **argv) {
     pass_counter++;
   } while (remaining > 0);
 
-  ierr = write_mask(mpi_comm, mpi_rank, "mask.nc", X, Y, new_mask); CHKERRQ(ierr);
+  ierr = write_mask(mpi_comm, mpi_rank, "mask.nc", X, Y, data); CHKERRQ(ierr);
 
   gsl_odeiv_step_free (step);
-  delete[] mask;
-  delete[] new_mask;
+
+  delete[] data;
   delete dem;
 
   /* Shut down MPI. */

@@ -8,11 +8,15 @@
 
 using namespace std;
 
+struct Node {
+  double elevation, mask, new_mask;
+};
+
 enum MASK_VALUES {NO_VALUE = -2, ICE_FREE = -1};
 
 class DEM {
 public:
-  DEM(double *x, int Mx, double *y, int My, double *z);
+  DEM(double *x, int Mx, double *y, int My, Node *dem);
   ~DEM();
 
   void evaluate(const double *position, double *elevation, double *f);
@@ -64,11 +68,12 @@ public:
   { return spacing; }
 
 protected:
-  double *x, *y, *z;
+  double *x, *y;
+  Node *dem;
   int Mx, My;
   double spacing, x_spacing, y_spacing, one_over_dx, one_over_dy;
 
-  inline void get_corner_values(int i, int j, double *data,
+  inline void get_corner_values(int i, int j, Node *data,
                                 double &A, double &B, double &C, double &D) {
     // Get the surface elevation at grid corners (arranged like so):
     //
@@ -80,7 +85,7 @@ protected:
     //   | *   |   x
     // --A-----D---->
     //   |
-#define DATA(i,j) ((data)[(j)*Mx + (i)])
+#define DATA(i,j) ((data)[(j)*Mx + (i)].elevation)
     A = DATA(i,     j);
     B = DATA(i,     j + 1);
     C = DATA(i + 1, j + 1);

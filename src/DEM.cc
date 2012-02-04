@@ -12,15 +12,12 @@ DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My,
   z   = my_z;
 
   // We assume that the grid is uniform.
-  x_spacing = x[1] - x[0];
-  y_spacing = y[1] - y[0];
-  spacing = x_spacing > y_spacing ? x_spacing : y_spacing;
+  dx = x[1] - x[0];
+  dy = y[1] - y[0];
+  spacing = dx > dy ? dx : dy;
 
-  one_over_dx = 1.0 / x_spacing;
-  one_over_dy = 1.0 / y_spacing;
-}
-
-DEM::~DEM() {
+  one_over_dx = 1.0 / dx;
+  one_over_dy = 1.0 / dy;
 }
 
 void DEM::evaluate(const double *position, double *elevation, double *f) {

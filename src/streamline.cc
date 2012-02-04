@@ -13,8 +13,8 @@ int function(double t, const double y[], // inputs
   return GSL_SUCCESS;
 }
 
-#define OLD_MASK(i,j) old_mask[(j) * dem->get_Mx() + (i)]
-#define NEW_MASK(i,j) new_mask[(j) * dem->get_Mx() + (i)]
+#define OLD_MASK(i,j) old_mask[(j) * dem->Mx + (i)]
+#define NEW_MASK(i,j) new_mask[(j) * dem->Mx + (i)]
 
 int streamline(gsl_odeiv_system system,
                gsl_odeiv_step *step,
@@ -26,14 +26,18 @@ int streamline(gsl_odeiv_system system,
                double *old_mask, double *new_mask) {
   DEM *dem = (DEM*)system.params;
 
-  int counter, mask_counter = 0,
-    n_max = (dem->get_Mx() + dem->get_My()) * steps_per_cell,
-    i = 0, j = 0, i_old, j_old, status;
+  int mask_counter = 0,
+    n_max = (dem->Mx + dem->My) * steps_per_cell,
+    i = i_start, j = j_start,
+    i_old, j_old,
+    status;
 
-  double grid_spacing = dem->get_spacing(),
-    position[2], err[2];
-
-  double gradient[2], elevation, gradient_magnitude, step_size;
+  double step_length = dem->spacing / steps_per_cell,
+    position[2],
+    err[2],
+    gradient[2],
+    elevation,
+    gradient_magnitude;
 
   map<int,int> values;
 
@@ -43,8 +47,8 @@ int streamline(gsl_odeiv_system system,
   if (mask_value > 0 || mask_value == ICE_FREE)
     return 0;
 
-  position[0] = dem->get_x(i_start) + dem->dx() * 0.5;
-  position[1] = dem->get_y(j_start) + dem->dy() * 0.5;
+  position[0] = dem->x[i_start] + dem->dx * 0.5;
+  position[1] = dem->y[j_start] + dem->dy * 0.5;
 
   dem->evaluate(position, &elevation, NULL);
 
@@ -56,7 +60,7 @@ int streamline(gsl_odeiv_system system,
   if (elevation > max_elevation)
     return 1;
 
-  for (counter = 0; counter < n_max; ++counter) {
+  for (int step_counter = 0; step_counter < n_max; ++step_counter) {
 
     i_old = i; j_old = j;
     status = dem->find_cell(position, i, j);
@@ -81,12 +85,10 @@ int streamline(gsl_odeiv_system system,
 
     gradient_magnitude = sqrt(gradient[0]*gradient[0] + gradient[1]*gradient[1]);
 
-    step_size = (grid_spacing / steps_per_cell) / gradient_magnitude;
-
     // take a step
     status = gsl_odeiv_step_apply(step,
                                   0,         // starting time (irrelevant)
-                                  step_size, // step size
+                                  step_length / gradient_magnitude, // step size (units of time)
                                   position, err, NULL, NULL, &system);
 
     if (status != GSL_SUCCESS) {
@@ -94,23 +96,23 @@ int streamline(gsl_odeiv_system system,
       break;
     }
 
-  } // time-stepping loop (counter)
+  } // time-stepping loop (step_counter)
 
   // Find the mask value that appears more often than others.
-  int result = NO_VALUE;
-  int n = 0;
+  int most_frequent_mask_value = NO_VALUE;
+  int number_of_occurences = 0;
 
   map<int,int>::iterator k;
   for (k = values.begin(); k != values.end(); ++k) {
-    if (k->second > n) {
-      n = k->second;
-      result = k->first;
+    if (k->second > number_of_occurences) {
+      number_of_occurences = k->second;
+      most_frequent_mask_value = k->first;
     }
   }
 
-  NEW_MASK(i_start, j_start) = result;
+  NEW_MASK(i_start, j_start) = most_frequent_mask_value;
 
-  if (result == 0)
+  if (most_frequent_mask_value == NO_VALUE)
     return 1;
 
   return 0;

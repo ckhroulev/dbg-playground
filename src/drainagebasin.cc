@@ -44,9 +44,7 @@ int main(int argc, char **argv) {
 
   gsl_odeiv_system system = {function, NULL, 2, dem};
 
-  gsl_odeiv_step *step = gsl_odeiv_step_alloc(
-                                                gsl_odeiv_step_rkf45,
-                                                2);
+  gsl_odeiv_step *step = gsl_odeiv_step_alloc(gsl_odeiv_step_rkf45, 2);
 
   double *mask = new double[X.size() * Y.size()];
   double *new_mask = new double[X.size() * Y.size()];

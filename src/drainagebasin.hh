@@ -13,7 +13,7 @@ enum MASK_VALUES {NO_VALUE = -2, ICE_FREE = -1};
 class DEM {
 public:
   DEM(double *x, int Mx, double *y, int My, double *z);
-  ~DEM();
+  ~DEM() {}
 
   void evaluate(const double *position, double *elevation, double *f);
 
@@ -30,44 +30,11 @@ public:
     return 0;
   }
 
-  inline double get_x(int i)
-  { return x[i]; }
-
-  inline double get_y(int j)
-  { return y[j]; }
-
-  inline double x_min()
-  { return x[0]; }
-
-  inline double x_max()
-  { return x[Mx-1]; }
-
-  inline double y_min()
-  { return y[0]; }
-
-  inline double y_max()
-  { return y[My-1]; }
-
-  inline double dx()
-  { return x_spacing; }
-
-  inline double dy()
-  { return y_spacing; }
-
-  inline int get_Mx()
-  { return Mx; }
-
-  inline int get_My()
-  { return My; }
-
-  inline double get_spacing()
-  { return spacing; }
-
-protected:
   double *x, *y, *z;
+  double spacing, dx, dy;
   int Mx, My;
-  double spacing, x_spacing, y_spacing, one_over_dx, one_over_dy;
-
+protected:
+  double one_over_dx, one_over_dy;
   inline void get_corner_values(int i, int j, double *data,
                                 double &A, double &B, double &C, double &D) {
     // Get the surface elevation at grid corners (arranged like so):

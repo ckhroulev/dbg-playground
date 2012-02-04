@@ -14,6 +14,7 @@ DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My,
   // We assume that the grid is uniform.
   x_spacing = x[1] - x[0];
   y_spacing = y[1] - y[0];
+  spacing = x_spacing > y_spacing ? x_spacing : y_spacing;
 
   one_over_dx = 1.0 / x_spacing;
   one_over_dy = 1.0 / y_spacing;
@@ -24,7 +25,7 @@ DEM::~DEM() {
 
 void DEM::evaluate(const double *position, double *elevation, double *f) {
   int ierr, i, j;
-  double A, B, C, D, delta_x, delta_y;
+  double A, B, C, D;
 
   ierr = this->find_cell(position, i, j);
 
@@ -41,27 +42,32 @@ void DEM::evaluate(const double *position, double *elevation, double *f) {
     return;
   }
 
-  delta_x = position[0] - x[i];
-  delta_y = position[1] - y[j];
-
-  double
-    alpha = one_over_dx * delta_x,
-    beta  = one_over_dy * delta_y;
-
   this->get_corner_values(i, j, z, A, B, C, D);
 
-  double gamma = one_over_dx * one_over_dy * (A + C - B - D);
+  double
+    delta_x = position[0] - x[i],
+    delta_y = position[1] - y[j];
 
   // surface elevation
   if (elevation != NULL) {
+    double
+      alpha = one_over_dx * delta_x,
+      beta  = one_over_dy * delta_y;
+
     *elevation = ( (1 - alpha) * (1 - beta) * A +
                    (1 - alpha) *      beta  * B +
                    alpha       *      beta  * C +
                    alpha       * (1 - beta) * D );
+
+    // Note: we could just do this:
+    // *elevation = A;
+    // and no one would care. It would be a little faster, too.
   }
 
   // minus the gradient
   if (f != NULL) {
+    double gamma = one_over_dx * one_over_dy * (A + C - B - D);
+
     f[0] = -((D - A) * one_over_dx + delta_x * gamma);
     f[1] = -((B - A) * one_over_dy + delta_y * gamma);
   }

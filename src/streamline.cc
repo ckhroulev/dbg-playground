@@ -13,6 +13,9 @@ int function(double t, const double y[], // inputs
   return GSL_SUCCESS;
 }
 
+#define OLD_MASK(i,j) old_mask[(j) * dem->get_Mx() + (i)]
+#define NEW_MASK(i,j) new_mask[(j) * dem->get_Mx() + (i)]
+
 int streamline(gsl_odeiv_system system,
                gsl_odeiv_step *step,
                int i_start, int j_start,
@@ -27,16 +30,17 @@ int streamline(gsl_odeiv_system system,
     n_max = (dem->get_Mx() + dem->get_My()) * steps_per_cell,
     i = 0, j = 0, i_old, j_old, status;
 
-  double grid_spacing = dem->dx() < dem->dy() ? dem->dx() : dem->dy(),
+  double grid_spacing = dem->get_spacing(),
     position[2], err[2];
 
   double gradient[2], elevation, gradient_magnitude, step_size;
 
   map<int,int> values;
 
+  int mask_value = OLD_MASK(i_start, j_start);
+
   // stop if the current cell already has a value assigned
-  if (old_mask[i_start * dem->get_My() + j_start] > 0 ||
-      old_mask[i_start * dem->get_My() + j_start] == -2)
+  if (mask_value > 0 || mask_value == ICE_FREE)
     return 0;
 
   position[0] = dem->get_x(i_start) + dem->dx() * 0.5;
@@ -60,13 +64,13 @@ int streamline(gsl_odeiv_system system,
     if (status != 0)
       break;
 
-    int old_mask_value = old_mask[i * dem->get_My() + j];
+    mask_value = OLD_MASK(i, j);
 
-    if (old_mask_value == -2)   // ice-free
+    if (mask_value == ICE_FREE)   // ice-free
       break;
 
-    if ((i != i_old || j != j_old) && (old_mask_value > 0)) {
-      values[old_mask_value]++;
+    if ((i != i_old || j != j_old) && (mask_value > 0)) {
+      values[mask_value]++;
       mask_counter++;
 
       if (mask_counter == path_length)
@@ -93,7 +97,7 @@ int streamline(gsl_odeiv_system system,
   } // time-stepping loop (counter)
 
   // Find the mask value that appears more often than others.
-  int result = 0;
+  int result = NO_VALUE;
   int n = 0;
 
   map<int,int>::iterator k;
@@ -104,10 +108,13 @@ int streamline(gsl_odeiv_system system,
     }
   }
 
-  new_mask[i_start * dem->get_My() + j_start] = result;
+  NEW_MASK(i_start, j_start) = result;
 
   if (result == 0)
     return 1;
 
   return 0;
 }
+
+#undef OLD_MASK
+#undef NEW_MASK

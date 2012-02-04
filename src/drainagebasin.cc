@@ -68,14 +68,16 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Pass %04d: elevation range [%4.0f, %4.0f] m...", pass_counter,
             min_elevation, max_elevation);
 
-    for (int i = 0; i < X.size(); i++) {
-      for (int j = 0; j < Y.size(); j++) {
+    for (int j = 0; j < Y.size(); j++) { // traverse in the optimal order
+      for (int i = 0; i < X.size(); i++) {
+
         remaining += streamline(system, step, i, j,
                                 2, // steps per cell
                                 5, // visit this many "assigned" cells
                                 min_elevation,
                                 max_elevation,
                                 mask, new_mask);
+
       }
     }
 

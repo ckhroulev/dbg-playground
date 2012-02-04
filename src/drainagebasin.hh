@@ -8,6 +8,8 @@
 
 using namespace std;
 
+enum MASK_VALUES {NO_VALUE = -2, ICE_FREE = -1};
+
 class DEM {
 public:
   DEM(double *x, int Mx, double *y, int My, double *z);
@@ -58,10 +60,13 @@ public:
   inline int get_My()
   { return My; }
 
+  inline double get_spacing()
+  { return spacing; }
+
 protected:
   double *x, *y, *z;
   int Mx, My;
-  double x_spacing, y_spacing, one_over_dx, one_over_dy;
+  double spacing, x_spacing, y_spacing, one_over_dx, one_over_dy;
 
   inline void get_corner_values(int i, int j, double *data,
                                 double &A, double &B, double &C, double &D) {
@@ -75,10 +80,12 @@ protected:
     //   | *   |   x
     // --A-----D---->
     //   |
-    A = data[(i    ) * My + (j    )];
-    B = data[(i    ) * My + (j + 1)];
-    C = data[(i + 1) * My + (j + 1)];
-    D = data[(i + 1) * My + (j    )];
+#define DATA(i,j) ((data)[(j)*Mx + (i)])
+    A = DATA(i,     j);
+    B = DATA(i,     j + 1);
+    C = DATA(i + 1, j + 1);
+    D = DATA(i + 1, j);
+#undef DATA(i,j)
   }
 };
 

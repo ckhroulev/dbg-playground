@@ -59,8 +59,8 @@ int read_dem(MPI_Comm com, int rank,
   count.resize(2);
   start[0] = 0;
   start[1] = 0;
-  count[0] = Mx;
-  count[1] = My;
+  count[0] = My;
+  count[1] = Mx;
 
   Z.resize(Mx*My);
   ierr = nc.get_vara_double("usurf", start, count, &Z[0]);
@@ -132,8 +132,8 @@ int write_mask(MPI_Comm com, int rank,
   }
 
   dims.resize(2);
-  dims[0] = "x";
-  dims[1] = "y";
+  dims[0] = "y";
+  dims[1] = "x";
   ierr = nc.def_var("mask", NC_DOUBLE, dims);
   if (ierr != NC_NOERR) {
     printf("Can't create the 'mask' variable.\n");
@@ -165,8 +165,8 @@ int write_mask(MPI_Comm com, int rank,
   count.resize(2);
   start[0] = 0;
   start[1] = 0;
-  count[0] = Mx;
-  count[1] = My;
+  count[0] = My;
+  count[1] = Mx;
   ierr = nc.put_vara_double("mask", start, count, Z);
   if (ierr != NC_NOERR) {
     printf("Can't write the 'mask' variable.\n");

@@ -1,10 +1,9 @@
 #include <mpi.h>
-
 #include <cstdio>
 #include <vector>
-#include <cmath>
 
 #include "drainagebasin.hh"
+#include "DEM.hh"
 
 using namespace std;
 

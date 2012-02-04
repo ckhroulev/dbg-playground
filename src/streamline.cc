@@ -1,6 +1,7 @@
 #include "drainagebasin.hh"
-#include <cmath>
-#include <map>
+#include "DEM.hh"
+#include <cmath>                // sqrt
+#include <map>                  // map<int,int>
 
 using namespace std;
 
@@ -9,6 +10,9 @@ int function(double t, const double y[], // inputs
              void* params) {
 
   ((DEM*)params)->evaluate(y, NULL, f);
+
+  f[0] *= -1;
+  f[1] *= -1;
 
   return GSL_SUCCESS;
 }

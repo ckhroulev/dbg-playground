@@ -1,8 +1,9 @@
 #include "drainagebasin.hh"
+#include "DEM.hh"
 
-DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My,
-         double *my_z) {
+#include <cmath>
 
+DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My, double *my_z) {
   x  = my_x;
   Mx = my_Mx;
 
@@ -20,7 +21,7 @@ DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My,
   one_over_dy = 1.0 / dy;
 }
 
-void DEM::evaluate(const double *position, double *elevation, double *f) {
+void DEM::evaluate(const double *position, double *elevation, double *gradient) {
   int ierr, i, j;
   double A, B, C, D;
 
@@ -33,8 +34,8 @@ void DEM::evaluate(const double *position, double *elevation, double *f) {
     if (elevation != NULL)
       *elevation = 0;
 
-    if (f != NULL)
-      f[0] = f[1] = 0;
+    if (gradient != NULL)
+      gradient[0] = gradient[1] = 0;
 
     return;
   }
@@ -62,11 +63,11 @@ void DEM::evaluate(const double *position, double *elevation, double *f) {
   }
 
   // minus the gradient
-  if (f != NULL) {
+  if (gradient != NULL) {
     double gamma = one_over_dx * one_over_dy * (A + C - B - D);
 
-    f[0] = -((D - A) * one_over_dx + delta_x * gamma);
-    f[1] = -((B - A) * one_over_dy + delta_y * gamma);
+    gradient[0] = (D - A) * one_over_dx + delta_x * gamma;
+    gradient[1] = (B - A) * one_over_dy + delta_y * gamma;
   }
 
 } // end of DEM::evaluate()

@@ -1,1 +1,5 @@
 build/*
+*.aux
+*.log
+*.sinctex.gz
+.DS_Store

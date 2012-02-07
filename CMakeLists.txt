@@ -23,7 +23,7 @@ set (CMAKE_C_FLAGS_DEBUG "-g ${PEDANTIC_CFLAGS}")
 set (CMAKE_CXX_FLAGS_DEBUG "-g ${PEDANTIC_CXXFLAGS}")
 set (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -ffast-math")
 
-include_directories (${GSL_INCLUDES} ${NETCDF_INCLUDES} ${MPI_INCLUDE_PATH})
+include_directories (src src/dem src/io ${GSL_INCLUDES} ${NETCDF_INCLUDES} ${MPI_INCLUDE_PATH})
 set (EXTERNAL_LIBS ${GSL_LIBRARIES} ${NETCDF_LIBRARIES} ${MPI_LIBRARIES})
 
 # Tell GSL to use inline versions of some functions:
@@ -32,9 +32,9 @@ add_definitions(-DHAVE_INLINE -DGSL_RANGE_CHECK_OFF)
 add_executable (db
   src/drainagebasin.cc
   src/init.cc
-  src/DEM.cc
   src/streamline.cc
-  src/IO.cc
-  src/PISMNC3File.cc
-  src/PISMNCFile.cc)
+  src/dem/DEM.cc
+  src/io/IO.cc
+  src/io/PISMNC3File.cc
+  src/io/PISMNCFile.cc)
 target_link_libraries(db ${EXTERNAL_LIBS})

@@ -62,7 +62,7 @@ void DEM::evaluate(const double *position, double *elevation, double *gradient) 
     // and no one would care. It would be a little faster, too.
   }
 
-  // minus the gradient
+  // the gradient
   if (gradient != NULL) {
     double gamma = one_over_dx * one_over_dy * (A + C - B - D);
 

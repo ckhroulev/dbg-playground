@@ -20,7 +20,7 @@ for i in range(Mx):
         yy = y[j]
         r = np.sqrt(xx*xx + yy*yy)
         if r < 15e4:
-            z[j, i] = h + np.sqrt(15e4*15e4 - xx*xx - yy*yy)/150.0
+            z[j, i] = np.sqrt(15e4*15e4 - xx*xx - yy*yy)/150.0
 
 nc.write_2d_field("usurf", z)
 nc.write_2d_field("thk",   z)

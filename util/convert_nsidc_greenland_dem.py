@@ -5,6 +5,8 @@ shape = (2782, 2611)
 x = r_[0:shape[1]:1]
 y = r_[0:shape[0]:1]
 
+#download data from http://nsidc.org/data/docs/daac/nsidc0304_0305_glas_dems.gd.html
+
 dem = fromfile("NSIDC_Grn1km_wgs84_elev_cm.dat", dtype=">i", count=-1)
 dem = dem.reshape(shape) / 100.0        # convert to meters
 

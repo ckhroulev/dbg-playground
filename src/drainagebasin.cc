@@ -39,23 +39,23 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  DEM *dem = new DEM(&X[0], X.size(), &Y[0], Y.size(), &Z[0]);
+  int Mx = X.size(), My = Y.size();
+  DEM *dem = new DEM(&X[0], Mx, &Y[0], My, &Z[0]);
 
   gsl_odeiv_system system = {function, NULL, 2, dem};
 
   gsl_odeiv_step *step = gsl_odeiv_step_alloc(gsl_odeiv_step_rkf45, 2);
 
-  double *mask = new double[X.size() * Y.size()];
-  double *new_mask = new double[X.size() * Y.size()];
+  Array2D<double> mask(Mx, My), new_mask(Mx, My);
 
-  if (mask == NULL || new_mask == NULL) {
+  if (mask.allocate() != 0 || new_mask.allocate() != 0) {
     printf("Memory allocation failed.\n");
     MPI_Finalize();
     return 1;
   }
 
   // initialize the mask
-  init_mask(X.size(), Y.size(), &thk[0], mask, new_mask);
+  init_mask(&thk[0], mask, new_mask);
 
   int remaining, pass_counter = 1;
   double elevation_step = 10,
@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 
     fprintf(stderr, " done; %d cells left.\n", remaining);
 
-    memcpy(mask, new_mask, X.size()*Y.size()*sizeof(double));
+    memcpy(mask.data(), new_mask.data(), Mx*My*sizeof(double));
 
     min_elevation = max_elevation;
     max_elevation += elevation_step;
@@ -91,8 +91,6 @@ int main(int argc, char **argv) {
   ierr = write_mask(mpi_comm, mpi_rank, "mask.nc", X, Y, new_mask); CHKERRQ(ierr);
 
   gsl_odeiv_step_free (step);
-  delete[] mask;
-  delete[] new_mask;
   delete dem;
 
   /* Shut down MPI. */

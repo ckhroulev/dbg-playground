@@ -1,9 +1,8 @@
-#include "drainagebasin.hh"
 #include "DEM.hh"
-
 #include <cmath>
 
-DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My, double *my_z) {
+DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My, double *my_z)
+  : elevation(my_Mx, my_My) {
   x  = my_x;
   Mx = my_Mx;
 
@@ -19,6 +18,8 @@ DEM::DEM(double *my_x, int my_Mx, double *my_y, int my_My, double *my_z) {
 
   one_over_dx = 1.0 / dx;
   one_over_dy = 1.0 / dy;
+
+  elevation.wrap(z);
 }
 
 void DEM::evaluate(const double *position, double *elevation, double *gradient) {
@@ -40,7 +41,7 @@ void DEM::evaluate(const double *position, double *elevation, double *gradient) 
     return;
   }
 
-  this->get_corner_values(i, j, z, A, B, C, D);
+  this->get_corner_values(i, j, A, B, C, D);
 
   double
     delta_x = position[0] - x[i],

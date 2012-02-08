@@ -17,9 +17,6 @@ int function(double t, const double y[], // inputs
   return GSL_SUCCESS;
 }
 
-#define OLD_MASK(i,j) old_mask[(j) * dem->Mx + (i)]
-#define NEW_MASK(i,j) new_mask[(j) * dem->Mx + (i)]
-
 int streamline(gsl_odeiv_system system,
                gsl_odeiv_step *step,
                int i_start, int j_start,
@@ -27,7 +24,8 @@ int streamline(gsl_odeiv_system system,
                int path_length,
                double min_elevation,
                double max_elevation,
-               double *old_mask, double *new_mask) {
+               Array2D<double> &old_mask,
+               Array2D<double> &new_mask) {
   DEM *dem = (DEM*)system.params;
 
   int mask_counter = 0,
@@ -45,7 +43,7 @@ int streamline(gsl_odeiv_system system,
 
   map<int,int> values;
 
-  int mask_value = OLD_MASK(i_start, j_start);
+  int mask_value = old_mask(i_start, j_start);
 
   // stop if the current cell already has a value assigned
   if (mask_value > 0 || mask_value == ICE_FREE)
@@ -72,7 +70,7 @@ int streamline(gsl_odeiv_system system,
     if (status != 0)
       break;
 
-    mask_value = OLD_MASK(i, j);
+    mask_value = old_mask(i, j);
 
     if (mask_value == ICE_FREE)   // ice-free
       break;
@@ -114,13 +112,10 @@ int streamline(gsl_odeiv_system system,
     }
   }
 
-  NEW_MASK(i_start, j_start) = most_frequent_mask_value;
+  new_mask(i_start, j_start) = most_frequent_mask_value;
 
   if (most_frequent_mask_value == NO_VALUE)
     return 1;
 
   return 0;
 }
-
-#undef OLD_MASK
-#undef NEW_MASK

@@ -1,5 +1,7 @@
 build/*
 *.aux
 *.log
-*.sinctex.gz
+*.synctex.gz
+*.rel
 .DS_Store
+data/*

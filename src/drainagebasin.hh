@@ -2,10 +2,12 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_odeiv.h>
 
+// MPI and C++ stuff
 #include <mpi.h>
 #include <vector>
-
 using namespace std;
+
+#include "Array2D.hh"
 
 enum MASK_VALUES {NO_VALUE = -2, ICE_FREE = -1};
 
@@ -22,12 +24,11 @@ int write_mask(MPI_Comm com, int rank,
                const char *filename,
                vector<double> &X,
                vector<double> &Y,
-               double *Z);
+               Array2D<double> &Z);
 
-void init_mask(int Mx, int My,
-               double *thickness,
-               double *mask,
-               double *tmp);
+void init_mask(double *thickness,
+               Array2D<double> &mask,
+               Array2D<double> &tmp);
 
 int streamline(gsl_odeiv_system system,
                gsl_odeiv_step *step,
@@ -36,5 +37,5 @@ int streamline(gsl_odeiv_system system,
                int path_length,
                double min_elevation,
                double max_elevation,
-               double *mask,
-               double *output);
+               Array2D<double> &mask,
+               Array2D<double> &output);

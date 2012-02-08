@@ -87,7 +87,7 @@ int write_mask(MPI_Comm com, int rank,
                const char *filename,
                vector<double> &X,
                vector<double> &Y,
-               double *Z) {
+               Array2D<double> &Z) {
 
   int ierr;
   unsigned int Mx = X.size(), My = Y.size();
@@ -167,7 +167,7 @@ int write_mask(MPI_Comm com, int rank,
   start[1] = 0;
   count[0] = My;
   count[1] = Mx;
-  ierr = nc.put_vara_double("mask", start, count, Z);
+  ierr = nc.put_vara_double("mask", start, count, Z.data());
   if (ierr != NC_NOERR) {
     printf("Can't write the 'mask' variable.\n");
     ierr = nc.close();

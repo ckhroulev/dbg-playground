@@ -7,13 +7,6 @@
 
 using namespace std;
 
-#define CHKERRQ(e) do { \
-    if ((e) != 0) {                                              \
-      printf("Bailing out in file %s, line %d.\n", __FILE__, __LINE__); \
-      return e;                                                         \
-    }                                                                   \
-  } while (0)
-
 int main(int argc, char **argv) {
 
   /* MPI stuff. */
@@ -29,8 +22,8 @@ int main(int argc, char **argv) {
 
   printf("# mpi_name: %s size: %d rank: %d\n", mpi_name, mpi_size, mpi_rank);
 
-  vector<double> X, Y,          // coordinates
-    Z, thk;                     // elevation, interpreted as a 2D array
+  vector<double> X, Y;          // coordinates
+  Array2D<double> thk(1, 1), Z(1, 1); // the right size will be set later
 
   ierr = read_dem(mpi_comm, mpi_rank, "dem.nc", X, Y, Z, thk);
   if (ierr != 0) {
@@ -40,7 +33,7 @@ int main(int argc, char **argv) {
   }
 
   int Mx = X.size(), My = Y.size();
-  DEM *dem = new DEM(&X[0], Mx, &Y[0], My, &Z[0]);
+  DEM *dem = new DEM(&X[0], Mx, &Y[0], My, Z.data());
 
   gsl_odeiv_system system = {function, NULL, 2, dem};
 
@@ -55,7 +48,7 @@ int main(int argc, char **argv) {
   }
 
   // initialize the mask
-  init_mask(&thk[0], mask, new_mask);
+  init_mask(thk, mask, new_mask);
 
   int remaining, pass_counter = 1;
   double elevation_step = 10,

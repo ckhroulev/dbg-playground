@@ -3,16 +3,12 @@
 
 #include <gsl/gsl_matrix.h>
 
-void init_mask(double *thickness,
+void init_mask(Array2D<double> &THK,
                Array2D<double> &mask,
                Array2D<double> &tmp) {
   int Mx = mask.Mx(), My = mask.My();
 
   memset(mask.data(), 0, Mx*My*sizeof(double));
-
-  Array2D<double> THK(Mx, My);
-
-  THK.wrap(thickness);
 
   double thk_eps = 1;
 

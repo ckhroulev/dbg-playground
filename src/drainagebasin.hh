@@ -9,6 +9,14 @@ using namespace std;
 
 #include "Array2D.hh"
 
+#define CHKERRQ(e) do { \
+    if ((e) != 0) {                                              \
+      printf("Bailing out in file %s, line %d.\n", __FILE__, __LINE__); \
+      return e;                                                         \
+    }                                                                   \
+  } while (0)
+
+
 enum MASK_VALUES {NO_VALUE = -2, ICE_FREE = -1};
 
 int function(double t, const double y[], double f[], void* params);
@@ -17,8 +25,8 @@ int read_dem(MPI_Comm com, int rank,
              const char *filename,
              vector<double> &X,
              vector<double> &Y,
-             vector<double> &Z,
-             vector<double> &thk);
+             Array2D<double> &Z,
+             Array2D<double> &thk);
 
 int write_mask(MPI_Comm com, int rank,
                const char *filename,
@@ -26,7 +34,7 @@ int write_mask(MPI_Comm com, int rank,
                vector<double> &Y,
                Array2D<double> &Z);
 
-void init_mask(double *thickness,
+void init_mask(Array2D<double> &thickness,
                Array2D<double> &mask,
                Array2D<double> &tmp);
 

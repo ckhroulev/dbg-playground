@@ -1,12 +1,13 @@
 #include "drainagebasin.hh"
 #include <string.h>
-
-#include <gsl/gsl_matrix.h>
+#include "basins.hh"
 
 void init_mask(Array2D<double> &THK,
-               Array2D<double> &mask,
-               Array2D<double> &tmp) {
+               Array2D<double> &mask) {
   int Mx = mask.Mx(), My = mask.My();
+  Array2D<double> tmp(Mx, My);
+
+  tmp.allocate();
 
   memset(mask.data(), 0, Mx*My*sizeof(double));
 

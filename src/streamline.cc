@@ -1,4 +1,4 @@
-#include "drainagebasin.hh"
+#include "basins.hh"
 #include "DEM.hh"
 #include <cmath>                // sqrt
 #include <map>                  // map<int,int>

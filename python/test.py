@@ -1,13 +1,12 @@
 #!/usr/bin/env python
-
 import numpy as np
 
-a = np.zeros((5,5,3))
+a = np.zeros((5,5))
 
 print a
 
 import foo
 
-foo.foo_py(a)
+print foo.foo(a)
 
 print a

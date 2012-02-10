@@ -34,6 +34,7 @@ add_executable (db
   src/init.cc
   src/streamline.cc
   src/dem/DEM.cc
+  src/basins.cc
   src/io/IO.cc
   src/io/PISMNC3File.cc
   src/io/PISMNCFile.cc)

@@ -1,5 +1,8 @@
 #include <cmath>
 
+#ifndef _DEM_H_
+#define _DEM_H_
+
 #include "Array2D.hh"
 
 class DEM {
@@ -51,3 +54,5 @@ inline void DEM::get_corner_values(int i, int j,
   C = elevation(i + 1, j + 1);
   D = elevation(i + 1, j);
 }
+
+#endif /* _DEM_H_ */

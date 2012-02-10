@@ -6,9 +6,16 @@ cimport cfoo
 
 ctypedef np.double_t double_t
 
-def foo_py(A):
-    cdef np.ndarray[double_t, ndim=2, mode="c"] A_c
-    A_c = np.ascontiguousarray(A, dtype="d")
-    cfoo.foo(<double*>A_c.data, A_c.size)
+def foo_py(np.ndarray A):
+    if A.dtype != np.float64:
+        raise ValueError("only numpy.float64 arrays are supported")
 
-    return A_c
+    if A.flags.c_contiguous == False:
+        raise ValueError("only C-contiguous arrays are supported")
+
+    if A.ndim != 2:
+        raise ValueError("only 2D arrays are supported")
+
+    cfoo.foo(<double*>A.data, A.size)
+
+    return A

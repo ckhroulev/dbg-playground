@@ -1,10 +1,12 @@
-from distutils.core import setup, Extension
+from distutils.core import setup
+from distutils.extension import Extension
+from Cython.Distutils import build_ext
 import numpy
 
-module1 = Extension('dbgenerator', sources=['dbgenerator.c'],
-                    include_dirs=[numpy.get_include()+"/numpy"])
+extension = Extension("foo",
+                      sources=["foo.pyx", "cfoo.c"],
+                      include_dirs=[numpy.get_include()])
 
-setup(name = 'dbgenerator',
-        version='1.0',
-        description='Drainage basin generating tools',
-        ext_modules = [module1])
+setup(cmdclass = {'build_ext': build_ext},
+      ext_modules = [extension]
+      )

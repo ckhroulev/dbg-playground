@@ -9,7 +9,7 @@ template<class T>
 class Array2D {
 public:
   Array2D(int my_Mx, int my_My)
-    : private_Mx(my_Mx), private_My(my_My), private_data(NULL), wrapper(false)
+    : wrapper(false), private_data(NULL), private_Mx(my_Mx), private_My(my_My)
   { }
 
   ~Array2D() {

@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "drainagebasin.hh"
-#include "DEM.hh"
 #include "basins.hh"
 
 using namespace std;

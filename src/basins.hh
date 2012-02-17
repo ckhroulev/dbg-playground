@@ -9,7 +9,7 @@
 
 enum MASK_VALUES {NO_VALUE = -2, ICE_FREE = -1};
 
-int basins(double *x, int Mx, double *y, int My, double *z, double *mask, bool output);
+int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool output);
 
 int function(double t, const double y[], double f[], void* params);
 
@@ -20,7 +20,7 @@ int streamline(gsl_odeiv_system system,
                int path_length,
                double min_elevation,
                double max_elevation,
-               Array2D<double> &mask,
-               Array2D<double> &output);
+               Array2D<int> &mask,
+               Array2D<int> &output);
 
 #endif /* _BASINS_H_ */

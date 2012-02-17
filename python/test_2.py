@@ -13,11 +13,12 @@ y = np.array(nc.variables['y'][:], dtype=np.double)
 thk = np.squeeze(nc.variables['thk'][:])
 z = np.array(np.squeeze(nc.variables['usurf'][:]), dtype=np.double)
 
-# initialize the mask
-mask = np.zeros_like(thk, dtype=np.double) - 1           # ice free
+# initialize the mask (this takes too long)
+mask = np.zeros_like(thk, dtype=np.int) - 1           # ice free
 
 ii, jj = np.meshgrid([-1, 0, 1], [-1, 0, 1])
 
+tic = time.clock()
 counter = 1
 for i in range(1, x.size - 1):
     for j in range(1, y.size - 1):
@@ -27,14 +28,16 @@ for i in range(1, x.size - 1):
                 counter += 1
             else:
                 mask[j, i] = -2
+toc = time.clock()
+print "Mask initialization took %f seconds." % (toc - tic)
 
 import basins
 
 tic = time.clock()
-basins.basins(x, y, z, mask, True, False)
+basins.basins(x, y, z, mask)
 toc = time.clock()
 
-print "This computation took %f seconds." % (toc - tic)
+print "Drainage basin computation took %f seconds." % (toc - tic)
 
 plt.figure(2)
 plt.pcolormesh(x, y, mask)

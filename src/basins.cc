@@ -3,19 +3,19 @@
 #include "basins.hh"
 #include "DEM.hh"
 
-int basins(double *x, int Mx, double *y, int My, double *z, double *mask, bool output) {
+int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool output) {
   int remaining, pass_counter = 1;
   double elevation_step = 10,
     min_elevation = 0, max_elevation = elevation_step;
 
   DEM dem(x, Mx, y, My, z);
 
-  Array2D<double> my_mask(Mx, My), new_mask(Mx, My);
+  Array2D<int> my_mask(Mx, My), new_mask(Mx, My);
   my_mask.wrap(mask);
   if (new_mask.allocate() != 0)
     return -1;
 
-  memcpy(new_mask.data(), my_mask.data(), Mx*My*sizeof(double));
+  memcpy(new_mask.data(), my_mask.data(), Mx*My*sizeof(int));
 
   gsl_odeiv_system system = {function, NULL, 2, &dem};
   gsl_odeiv_step *step = gsl_odeiv_step_alloc(gsl_odeiv_step_rkf45, 2);
@@ -46,7 +46,7 @@ int basins(double *x, int Mx, double *y, int My, double *z, double *mask, bool o
       fflush(stdout);
     }
 
-    memcpy(my_mask.data(), new_mask.data(), Mx*My*sizeof(double));
+    memcpy(my_mask.data(), new_mask.data(), Mx*My*sizeof(int));
 
     min_elevation = max_elevation;
     max_elevation += elevation_step;

@@ -24,8 +24,8 @@ int streamline(gsl_odeiv_system system,
                int path_length,
                double min_elevation,
                double max_elevation,
-               Array2D<double> &old_mask,
-               Array2D<double> &new_mask) {
+               Array2D<int> &old_mask,
+               Array2D<int> &new_mask) {
   DEM *dem = (DEM*)system.params;
 
   int mask_counter = 0,

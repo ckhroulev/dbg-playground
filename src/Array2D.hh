@@ -26,7 +26,7 @@ public:
     if (private_data != NULL)
       free(private_data);
 
-    private_data = (double*)malloc(Mx() * My() * sizeof(T));
+    private_data = (T*)malloc(Mx() * My() * sizeof(T));
     if (private_data == NULL)
       return 1;
 

@@ -9,7 +9,7 @@
 
 enum MASK_VALUES {NO_VALUE = -2, ICE_FREE = -1};
 
-int basins(double *x, int Mx, double *y, int My, double *z, double *mask);
+int basins(double *x, int Mx, double *y, int My, double *z, double *mask, bool output);
 
 int function(double t, const double y[], double f[], void* params);
 

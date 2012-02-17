@@ -9,7 +9,7 @@ ctypedef np.double_t double_t
 def basins(np.ndarray[dtype=double_t, ndim=1] x,
            np.ndarray[dtype=double_t, ndim=1] y,
            np.ndarray[dtype=double_t, ndim=2, mode="c"] z,
-           np.ndarray[dtype=double_t, ndim=2, mode="c"] mask, int inplace):
+           np.ndarray[dtype=double_t, ndim=2, mode="c"] mask, int inplace, int print_output):
     """
     arguments:
     - x, y: 1D arrays with coordinates
@@ -39,6 +39,6 @@ def basins(np.ndarray[dtype=double_t, ndim=1] x,
     basins_c.basins(<double*>x.data, x.size,
                     <double*>y.data, y.size,
                     <double*>z.data,
-                    <double*>output.data)
+                    <double*>output.data, print_output)
 
     return output

@@ -42,7 +42,7 @@ plt.colorbar()
 
 import basins
 
-basins.basins(x, y, z, mask, True)
+basins.basins(x, y, z, mask, True, True)
 
 plt.figure(3)
 plt.pcolormesh(x, y, mask)

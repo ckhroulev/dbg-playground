@@ -111,6 +111,4 @@ void init_mask(Array2D<double> &THK,
 
     } // inner for loop
   } // outer for loop
-
-  memcpy(tmp.data(), mask.data(), Mx*My*sizeof(double));
 }

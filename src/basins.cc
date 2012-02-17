@@ -3,7 +3,7 @@
 #include "basins.hh"
 #include "DEM.hh"
 
-int basins(double *x, int Mx, double *y, int My, double *z, double *mask) {
+int basins(double *x, int Mx, double *y, int My, double *z, double *mask, bool output) {
   int remaining, pass_counter = 1;
   double elevation_step = 10,
     min_elevation = 0, max_elevation = elevation_step;
@@ -22,9 +22,11 @@ int basins(double *x, int Mx, double *y, int My, double *z, double *mask) {
 
   do {
     remaining = 0;
-    printf("Pass %04d: elevation range [%4.0f, %4.0f] m...", pass_counter,
-           min_elevation, max_elevation);
-    fflush(stdout);
+    if (output) {
+      printf("Pass %04d: elevation range [%4.0f, %4.0f] m...", pass_counter,
+             min_elevation, max_elevation);
+      fflush(stdout);
+    }
 
     for (int j = 0; j < My; j++) { // traverse in the optimal order
       for (int i = 0; i < Mx; i++) {
@@ -39,8 +41,10 @@ int basins(double *x, int Mx, double *y, int My, double *z, double *mask) {
       }
     }
 
-    printf(" done; %d cells left.\n", remaining);
-    fflush(stdout);
+    if (output) {
+      printf(" done; %d cells left.\n", remaining);
+      fflush(stdout);
+    }
 
     memcpy(my_mask.data(), new_mask.data(), Mx*My*sizeof(double));
 

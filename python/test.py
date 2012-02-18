@@ -1,51 +1,34 @@
 #!/usr/bin/env python
+
+from netCDF4 import Dataset as NC
+import sys
 import numpy as np
 import pylab as plt
-
-Mx = 401
-My = 201
-Lx = 20e4
-Ly = 20e4
-
-x   = np.linspace(-Lx, Lx, Mx)
-y   = np.linspace(-Ly, Ly, My)
-thk   = np.zeros((My, Mx))
-
-for i in range(Mx):
-    xx = x[i]
-    for j in range(My):
-        yy = y[j]
-        r = np.sqrt(xx*xx + yy*yy)
-        if r < 15e4:
-            thk[j, i] = np.sqrt(15e4*15e4 - xx*xx - yy*yy)/150.0
-
-xx,yy = np.meshgrid(x, y)
-z = 0.025 * xx + thk
-
-# initialize the mask
-mask = np.zeros_like(thk) - 2           # mark everything as "no value"
-mask[thk <= 1] = -1                     # mark ice free areas as such
-
-ii = np.zeros_like(mask, dtype=np.bool)
-np.logical_and(thk < 200, thk > 0, ii)  # indices of the margin
-np.logical_and(ii, z < -2500, ii)
-
-mask[ii] = 10
-
-plt.figure(1)
-plt.contour(x, y, z, 40)
-plt.colorbar()
-
-plt.figure(2)
-plt.pcolormesh(x, y, mask)
-plt.colorbar()
-
+import time
 import basins
 
-basins.basins(x, y, z, mask)
+# read the DEM data
+nc = NC(sys.argv[1])
+x = np.array(nc.variables['x'][:], dtype=np.double)
+y = np.array(nc.variables['y'][:], dtype=np.double)
+thk = np.array(np.squeeze(nc.variables['thk'][:]), dtype=np.double)
+z = np.array(np.squeeze(nc.variables['usurf'][:]), dtype=np.double)
 
-plt.figure(3)
+# initialize the mask
+tic = time.clock()
+mask = basins.init_mask(thk)
+toc = time.clock()
+print "Mask initialization took %f seconds." % (toc - tic)
+
+tic = time.clock()
+basins.basins(x, y, z, mask)
+toc = time.clock()
+print "Drainage basin computation took %f seconds." % (toc - tic)
+
+plt.figure(1)
 plt.pcolormesh(x, y, mask)
-plt.colorbar()
+plt.contour(x, y, z, colors='black')
+plt.axis('tight')
+plt.axes().set_aspect('equal')
 
 plt.show()

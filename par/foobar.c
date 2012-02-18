@@ -1,33 +1,33 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <omp.h>
 
 int main(int argc, char **argv) {
 
   double *data = NULL;
-  int N = 10, i;
+  int N = 16, i, num = 0;
 
   data = (double*)malloc(N * sizeof(double));
   if (data == NULL)
     return 1;
 
+  /* beginning of the parallel block */
 #pragma omp parallel shared(data) private(i)
   {
-    int num = omp_get_thread_num();
+    int my_num;
+
+#pragma omp critical
+    my_num = num++;
 
 #pragma omp for
     for (i = 0; i < N; ++i) {
-      data[i] = num;
+      data[i] = my_num;
     }
-  }
-  /* end of the parallel block */
+  } /* end of the parallel block */
 
-  for (i = 0; i < N; ++i) {
+  for (i = 0; i < N; ++i)
     printf("data[%d] = %f\n", i, data[i]);
-  }
 
   free(data);
-
 
   return 0;
 }

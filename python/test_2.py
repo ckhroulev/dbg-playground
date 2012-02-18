@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import pylab as plt
 import time
+import basins
 
 # read the DEM data
 nc = NC(sys.argv[1])
@@ -13,32 +14,15 @@ y = np.array(nc.variables['y'][:], dtype=np.double)
 thk = np.array(np.squeeze(nc.variables['thk'][:]), dtype=np.double)
 z = np.array(np.squeeze(nc.variables['usurf'][:]), dtype=np.double)
 
-# initialize the mask (this takes too long)
-mask = np.zeros_like(thk, dtype=np.int) - 1           # ice free
-
-ii, jj = np.meshgrid([-1, 0, 1], [-1, 0, 1])
-
-import basins
-
+# initialize the mask
 tic = time.clock()
-basins.init_mask(thk, mask)
-# counter = 1
-# for i in range(1, x.size - 1):
-#     for j in range(1, y.size - 1):
-#         if thk[j, i] > 1:
-#             if np.any(thk[jj + j, ii + i] < 1):
-#                 mask[j, i] = counter
-#                 counter += 1
-#             else:
-#                 mask[j, i] = -2
+mask = basins.init_mask(thk)
 toc = time.clock()
 print "Mask initialization took %f seconds." % (toc - tic)
-
 
 tic = time.clock()
 basins.basins(x, y, z, mask)
 toc = time.clock()
-
 print "Drainage basin computation took %f seconds." % (toc - tic)
 
 plt.figure(2)

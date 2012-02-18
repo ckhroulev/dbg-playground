@@ -6,6 +6,21 @@ cimport basins_c
 ctypedef np.double_t double_t
 ctypedef np.int_t int_t
 
+def init_mask(np.ndarray[dtype=double_t, ndim=2, mode="c"] thk,
+              np.ndarray[dtype=int_t, ndim=2, mode="c"] mask):
+    cdef int Mx, My
+
+    Mx = thk.shape[1]
+    My = thk.shape[0]
+
+    # thk and mask are typed, so z.shape is not a Python object.
+    # This means that we have to compare z.shape[0,1] to mask.shape[0,1] 'by hand'.
+    if not (My == mask.shape[0] and Mx == mask.shape[1]):
+        raise ValueError("arguments thk and mask have to have the same shape: got (%d,%d) and (%d,%d)" %
+                         (My, Mx, mask.shape[0], mask.shape[1]))
+
+    basins_c.init_mask(Mx, My, <double*>thk.data, <int*> mask.data)
+
 def basins(np.ndarray[dtype=double_t, ndim=1] x,
            np.ndarray[dtype=double_t, ndim=1] y,
            np.ndarray[dtype=double_t, ndim=2, mode="c"] z,

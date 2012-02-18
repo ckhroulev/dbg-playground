@@ -5,6 +5,7 @@
 
 #include "Array2D.hh"
 
+// A DEM on a regular cartesian grid.
 class DEM {
 public:
   DEM(double *x, int Mx, double *y, int My, double *z);
@@ -12,7 +13,6 @@ public:
 
   int find_cell(const double *position, int &i, int &j);
   void evaluate(const double *position, double *elevation, double *f);
-
 
   double *x, *y, *z;
   double spacing, dx, dy;

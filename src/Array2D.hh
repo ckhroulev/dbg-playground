@@ -3,8 +3,8 @@
 #ifndef _ARRAY2D_H_
 #define _ARRAY2D_H_
 
-// A 2D array accessor class hiding storage order details.
-// Should get inlined.
+/* A zero-cost 2D array class hiding storage order details. */
+/* This is a way to have clean code and avoid using evil macros. */
 template<class T>
 class Array2D {
 public:

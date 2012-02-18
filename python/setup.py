@@ -4,12 +4,15 @@ from Cython.Distutils import build_ext
 import numpy
 
 extension = Extension("basins",
-                      sources=["basins.pyx", "../src/basins.cc",
+                      sources=["basins.pyx",
+                               "../src/basins.cc",
                                "../src/streamline.cc",
-                               "../src/dem/DEM.cc"],
-                      include_dirs=[numpy.get_include(), '../src', '../src/dem'],
+                               "../src/DEM.cc",
+                               "../src/init_mask.cc"],
+                      include_dirs=[numpy.get_include(), '../src'],
                       library_dirs=['/opt/local/lib'],
                       libraries=['gsl', 'gslcblas'],
+                      extra_compile_args=["-O3", "-ffast-math"],
                       language="c++")
 
 setup(cmdclass = {'build_ext': build_ext},

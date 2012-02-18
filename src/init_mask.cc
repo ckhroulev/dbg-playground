@@ -1,15 +1,17 @@
-#include "drainagebasin.hh"
-#include <string.h>
+#include <string.h>             // memset
 #include "basins.hh"
 
-void init_mask(Array2D<double> &THK,
-               Array2D<double> &mask) {
-  int Mx = mask.Mx(), My = mask.My();
-  Array2D<double> tmp(Mx, My);
+int init_mask(int Mx, int My, double *thickness, int* output) {
+  Array2D<double> tmp(Mx, My), THK(Mx, My);
+  Array2D<int> mask(Mx, My);
 
-  tmp.allocate();
+  THK.wrap(thickness);
+  mask.wrap(output);
 
-  memset(mask.data(), 0, Mx*My*sizeof(double));
+  if (tmp.allocate() != 0)
+    return 1;
+
+  memset(mask.data(), 0, Mx*My*sizeof(int));
 
   double thk_eps = 1;
 
@@ -111,4 +113,6 @@ void init_mask(Array2D<double> &THK,
 
     } // inner for loop
   } // outer for loop
+
+  return 0;
 }

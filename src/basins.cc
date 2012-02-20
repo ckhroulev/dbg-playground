@@ -4,7 +4,7 @@
 #include "DEM.hh"
 
 int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool output) {
-  int remaining, pass_counter = 1;
+  int remaining = 0;
   double elevation_step = 10,
     min_elevation = 0, max_elevation = elevation_step;
 
@@ -17,44 +17,49 @@ int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool outp
 
   memcpy(new_mask.data(), my_mask.data(), Mx*My*sizeof(int));
 
-  gsl_odeiv_system system = {function, NULL, 2, &dem};
-  gsl_odeiv_step *step = gsl_odeiv_step_alloc(gsl_odeiv_step_rkf45, 2);
+#pragma omp parallel default(shared)
+  {
+    gsl_odeiv_system system = {function, NULL, 2, &dem};
+    gsl_odeiv_step *step = gsl_odeiv_step_alloc(gsl_odeiv_step_rkf45, 2);
 
-  do {
-    remaining = 0;
-    if (output) {
-      printf("Pass %04d: elevation range [%4.0f, %4.0f] m...", pass_counter,
-             min_elevation, max_elevation);
-      fflush(stdout);
-    }
+    do {
 
-    for (int j = 0; j < My; j++) { // traverse in the optimal order
-      for (int i = 0; i < Mx; i++) {
-
-        remaining += streamline(system, step, i, j,
-                                2, // steps per cell
-                                5, // visit this many "assigned" cells
-                                min_elevation,
-                                max_elevation,
-                                my_mask, new_mask);
-
+#pragma omp single
+      {
+        memcpy(my_mask.data(), new_mask.data(), Mx*My*sizeof(int));
       }
-    }
 
-    if (output) {
-      printf(" done; %d cells left.\n", remaining);
-      fflush(stdout);
-    }
+#pragma omp single
+      {
+        remaining = 0;
+      } // omp flush is implied
 
-    memcpy(my_mask.data(), new_mask.data(), Mx*My*sizeof(int));
+#pragma omp for reduction(+:remaining)
+      for (int j = 0; j < My; j++) { // traverse in the optimal order
+        for (int i = 0; i < Mx; i++) {
+          remaining += streamline(system, step, i, j,
+                                  2, // steps per cell
+                                  5, // visit this many "assigned" cells
+                                  min_elevation,
+                                  max_elevation,
+                                  my_mask, new_mask);
+        }
+      } // omp flush is implied
 
-    min_elevation = max_elevation;
-    max_elevation += elevation_step;
+#pragma omp single
+      {
+        // memcpy(my_mask.data(), new_mask.data(), Mx*My*sizeof(int));
+        min_elevation = max_elevation;
+        max_elevation += elevation_step;
+      } // omp flush is implied
 
-    pass_counter++;
-  } while (remaining > 0);
+    } while (remaining > 0);
 
-  gsl_odeiv_step_free (step);
+    gsl_odeiv_step_free (step);
+
+  } // end of the parallel block
+
+  memcpy(my_mask.data(), new_mask.data(), Mx*My*sizeof(int));
 
   return 0;
 }

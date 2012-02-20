@@ -11,8 +11,8 @@ extension = Extension("basins",
                                "../src/init_mask.cc"],
                       include_dirs=[numpy.get_include(), '../src'],
                       library_dirs=['/opt/local/lib'],
-                      libraries=['gsl', 'gslcblas'],
-                      extra_compile_args=["-O3", "-ffast-math"],
+                      libraries=['gsl', 'gslcblas', 'gomp'],
+                      extra_compile_args=["-O3", "-ffast-math", "-fopenmp"],
                       language="c++")
 
 setup(cmdclass = {'build_ext': build_ext},

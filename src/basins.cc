@@ -23,11 +23,12 @@ int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool outp
     gsl_odeiv_step *step = gsl_odeiv_step_alloc(gsl_odeiv_step_rkf45, 2);
 
     do {
-
-#pragma omp single
-      {
-        memcpy(my_mask.data(), new_mask.data(), Mx*My*sizeof(int));
-      }
+#pragma omp for
+      for (int j = 0; j < My; j++) { // traverse in the optimal order
+        for (int i = 0; i < Mx; i++) {
+          my_mask(i, j) = new_mask(i, j);
+        }
+      } // omp flush is implied
 
 #pragma omp single
       {
@@ -48,7 +49,6 @@ int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool outp
 
 #pragma omp single
       {
-        // memcpy(my_mask.data(), new_mask.data(), Mx*My*sizeof(int));
         min_elevation = max_elevation;
         max_elevation += elevation_step;
       } // omp flush is implied
@@ -57,9 +57,14 @@ int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool outp
 
     gsl_odeiv_step_free (step);
 
-  } // end of the parallel block
+#pragma omp for
+    for (int j = 0; j < My; j++) { // traverse in the optimal order
+      for (int i = 0; i < Mx; i++) {
+        my_mask(i, j) = new_mask(i, j);
+      }
+    } // omp flush is implied
 
-  memcpy(my_mask.data(), new_mask.data(), Mx*My*sizeof(int));
+  } // end of the parallel block
 
   return 0;
 }

@@ -17,7 +17,7 @@ def init_mask(np.ndarray[dtype=double_t, ndim=2, mode="c"] thk):
     Mx = thk.shape[1]
     My = thk.shape[0]
 
-    mask = np.zeros_like(thk, dtype=np.int)
+    mask = np.zeros((thk.shape[0], thk.shape[1]), dtype=np.int)
 
     basins_c.init_mask(Mx, My, <double*>thk.data, <int*> mask.data)
 

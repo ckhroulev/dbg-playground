@@ -23,7 +23,7 @@ int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool outp
     gsl_odeiv_step *step = gsl_odeiv_step_alloc(gsl_odeiv_step_rkf45, 2);
 
     do {
-#pragma omp for
+#pragma omp for schedule(dynamic)
       for (int j = 0; j < My; j++) { // traverse in the optimal order
         for (int i = 0; i < Mx; i++) {
           my_mask(i, j) = new_mask(i, j);
@@ -35,7 +35,7 @@ int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool outp
         remaining = 0;
       } // omp flush is implied
 
-#pragma omp for reduction(+:remaining)
+#pragma omp for schedule(dynamic) reduction(+:remaining)
       for (int j = 0; j < My; j++) { // traverse in the optimal order
         for (int i = 0; i < Mx; i++) {
           remaining += streamline(system, step, i, j,
@@ -57,7 +57,7 @@ int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool outp
 
     gsl_odeiv_step_free (step);
 
-#pragma omp for
+#pragma omp for schedule(dynamic)
     for (int j = 0; j < My; j++) { // traverse in the optimal order
       for (int i = 0; i < Mx; i++) {
         my_mask(i, j) = new_mask(i, j);

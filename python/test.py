@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 
-from netCDF4 import Dataset as NC
+try:
+	from netCDF3 import Dataset as NC
+except:
+	from netCDF4 import Dataset as NC
+
 import sys
 import numpy as np
 import pylab as plt
-import time
 import basins
 
 # read the DEM data
@@ -15,15 +18,11 @@ thk = np.array(np.squeeze(nc.variables['thk'][:]), dtype=np.double)
 z = np.array(np.squeeze(nc.variables['usurf'][:]), dtype=np.double)
 
 # initialize the mask
-tic = time.clock()
 mask = basins.init_mask(thk)
-toc = time.clock()
-print "Mask initialization took %f seconds." % (toc - tic)
+print "Mask initialization: done"
 
-tic = time.clock()
 basins.basins(x, y, z, mask)
-toc = time.clock()
-print "Drainage basin computation took %f seconds." % (toc - tic)
+print "Drainage basin computation: done"
 
 plt.figure(1)
 plt.pcolormesh(x, y, mask)

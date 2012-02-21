@@ -2,8 +2,8 @@
 #include "basins.hh"
 
 int init_mask(int Mx, int My, double *thickness, int* output) {
-  Array2D<double> tmp(Mx, My), THK(Mx, My);
-  Array2D<int> mask(Mx, My);
+  Array2D<double> THK(Mx, My);
+  Array2D<int> mask(Mx, My), tmp(Mx, My);
 
   THK.wrap(thickness);
   mask.wrap(output);

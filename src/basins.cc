@@ -24,6 +24,10 @@ int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool outp
         new_mask(i, j) = my_mask(i, j);
 
     do {
+#pragma omp for schedule(dynamic)
+      for (int j = 0; j < My; j++)
+        for (int i = 0; i < Mx; i++)
+          my_mask(i, j) = new_mask(i, j);
 
 #pragma omp single
       remaining = 0;
@@ -40,11 +44,6 @@ int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool outp
         }
       }
 
-#pragma omp for schedule(dynamic)
-      for (int j = 0; j < My; j++)
-        for (int i = 0; i < Mx; i++)
-          my_mask(i, j) = new_mask(i, j);
-
 #pragma omp single
       {
         min_elevation = max_elevation;
@@ -54,6 +53,11 @@ int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool outp
     } while (remaining > 0);
 
     gsl_odeiv_step_free (step);
+
+#pragma omp for schedule(dynamic)
+    for (int j = 0; j < My; j++)
+      for (int i = 0; i < Mx; i++)
+	my_mask(i, j) = new_mask(i, j);
 
   } // end of the parallel block
 

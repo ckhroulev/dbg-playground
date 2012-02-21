@@ -1,5 +1,3 @@
-#include <cstring>
-
 #include "basins.hh"
 #include "DEM.hh"
 
@@ -15,28 +13,23 @@ int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool outp
   if (new_mask.allocate() != 0)
     return -1;
 
-  memcpy(new_mask.data(), my_mask.data(), Mx*My*sizeof(int));
-
 #pragma omp parallel default(shared)
   {
     gsl_odeiv_system system = {function, NULL, 2, &dem};
     gsl_odeiv_step *step = gsl_odeiv_step_alloc(gsl_odeiv_step_rkf45, 2);
 
-    do {
 #pragma omp for schedule(dynamic)
-      for (int j = 0; j < My; j++) { // traverse in the optimal order
-        for (int i = 0; i < Mx; i++) {
-          my_mask(i, j) = new_mask(i, j);
-        }
-      } // omp flush is implied
+    for (int j = 0; j < My; j++)
+      for (int i = 0; i < Mx; i++)
+        new_mask(i, j) = my_mask(i, j);
+
+    do {
 
 #pragma omp single
-      {
-        remaining = 0;
-      } // omp flush is implied
+      remaining = 0;
 
 #pragma omp for schedule(dynamic) reduction(+:remaining)
-      for (int j = 0; j < My; j++) { // traverse in the optimal order
+      for (int j = 0; j < My; j++) { // Note: traverse in the optimal order
         for (int i = 0; i < Mx; i++) {
           remaining += streamline(system, step, i, j,
                                   2, // steps per cell
@@ -45,24 +38,22 @@ int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool outp
                                   max_elevation,
                                   my_mask, new_mask);
         }
-      } // omp flush is implied
+      }
+
+#pragma omp for schedule(dynamic)
+      for (int j = 0; j < My; j++)
+        for (int i = 0; i < Mx; i++)
+          my_mask(i, j) = new_mask(i, j);
 
 #pragma omp single
       {
         min_elevation = max_elevation;
         max_elevation += elevation_step;
-      } // omp flush is implied
+      }
 
     } while (remaining > 0);
 
     gsl_odeiv_step_free (step);
-
-#pragma omp for schedule(dynamic)
-    for (int j = 0; j < My; j++) { // traverse in the optimal order
-      for (int i = 0; i < Mx; i++) {
-        my_mask(i, j) = new_mask(i, j);
-      }
-    } // omp flush is implied
 
   } // end of the parallel block
 

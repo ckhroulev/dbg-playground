@@ -3,8 +3,7 @@
 
 int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool output) {
   int remaining = 0;
-  double elevation_step = 10,
-    min_elevation = 0, max_elevation = elevation_step;
+  const double elevation_step = 10;
 
   DEM dem(x, Mx, y, My, z);
 
@@ -17,6 +16,7 @@ int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool outp
   {
     gsl_odeiv_system system = {function, NULL, 2, &dem};
     gsl_odeiv_step *step = gsl_odeiv_step_alloc(gsl_odeiv_step_rkf45, 2);
+    coloring_context ctx = {system, step, 2, 5, 0, elevation_step};
 
 #pragma omp for schedule(dynamic)
     for (int j = 0; j < My; j++)
@@ -35,24 +35,16 @@ int basins(double *x, int Mx, double *y, int My, double *z, int *mask, bool outp
 #pragma omp for schedule(dynamic) reduction(+:remaining)
       for (int j = 0; j < My; j++) { // Note: traverse in the optimal order
         for (int i = 0; i < Mx; i++) {
-          remaining += streamline(system, step, i, j,
-                                  2, // steps per cell
-                                  5, // visit this many "assigned" cells
-                                  min_elevation,
-                                  max_elevation,
-                                  my_mask, new_mask);
+          remaining += streamline(ctx, i, j, my_mask, new_mask);
         }
       }
 
-#pragma omp single
-      {
-        min_elevation = max_elevation;
-        max_elevation += elevation_step;
-      }
+      ctx.min_elevation = ctx.max_elevation;
+      ctx.max_elevation += elevation_step;
 
     } while (remaining > 0);
 
-    gsl_odeiv_step_free (step);
+    gsl_odeiv_step_free(step);
 
 #pragma omp for schedule(dynamic)
     for (int j = 0; j < My; j++)

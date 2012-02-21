@@ -17,24 +17,19 @@ int function(double t, const double y[], // inputs
   return GSL_SUCCESS;
 }
 
-int streamline(gsl_odeiv_system system,
-               gsl_odeiv_step *step,
+int streamline(coloring_context ctx,
                int i_start, int j_start,
-               int steps_per_cell,
-               int path_length,
-               double min_elevation,
-               double max_elevation,
                Array2D<int> &old_mask,
                Array2D<int> &new_mask) {
-  DEM *dem = (DEM*)system.params;
+  DEM *dem = (DEM*)ctx.system.params;
 
   int mask_counter = 0,
-    n_max = (dem->Mx + dem->My) * steps_per_cell,
+    n_max = (dem->Mx + dem->My) * ctx.steps_per_cell,
     i = i_start, j = j_start,
     i_old, j_old,
     status;
 
-  double step_length = dem->spacing / steps_per_cell,
+  double step_length = dem->spacing / ctx.steps_per_cell,
     position[2],
     err[2],
     gradient[2],
@@ -55,11 +50,11 @@ int streamline(gsl_odeiv_system system,
   dem->evaluate(position, &elevation, NULL);
 
   // if there is no ice or we're below the minimum elevation, we're done
-  if (elevation < min_elevation)
+  if (elevation < ctx.min_elevation)
     return 0;
 
   // if we're above the maximum elevation, wait.
-  if (elevation > max_elevation)
+  if (elevation > ctx.max_elevation)
     return 1;
 
   for (int step_counter = 0; step_counter < n_max; ++step_counter) {
@@ -79,7 +74,7 @@ int streamline(gsl_odeiv_system system,
       values[mask_value]++;
       mask_counter++;
 
-      if (mask_counter == path_length)
+      if (mask_counter == ctx.path_length)
         break;
     }
 
@@ -88,10 +83,10 @@ int streamline(gsl_odeiv_system system,
     gradient_magnitude = sqrt(gradient[0]*gradient[0] + gradient[1]*gradient[1]);
 
     // take a step
-    status = gsl_odeiv_step_apply(step,
+    status = gsl_odeiv_step_apply(ctx.step,
                                   0,         // starting time (irrelevant)
                                   step_length / gradient_magnitude, // step size (units of time)
-                                  position, err, NULL, NULL, &system);
+                                  position, err, NULL, NULL, &ctx.system);
 
     if (status != GSL_SUCCESS) {
       printf ("error, return value=%d\n", status);

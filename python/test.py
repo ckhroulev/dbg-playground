@@ -24,10 +24,26 @@ print "Mask initialization: done"
 dbg.upslope_area(x, y, z, mask)
 print "Drainage basin computation: done"
 
+mask2 = np.zeros(thk.shape, dtype=np.int32) - 1
+mask2[thk > 0] = 0
+
+dbg.accumulated_flow(x, y, z, mask2)
+
+mask2[mask2 == -1] = 0
+mask2 += 1
+
 plt.figure(1)
 plt.pcolormesh(x, y, mask)
 plt.contour(x, y, z, colors='black')
 plt.axis('tight')
 plt.axes().set_aspect('equal')
+plt.title("upslope areas")
+
+plt.figure(2)
+plt.pcolormesh(x, y, np.log10(mask2))
+plt.contour(x, y, z, colors='black')
+plt.axis('tight')
+plt.axes().set_aspect('equal')
+plt.title("accumulated flow")
 
 plt.show()

@@ -6,6 +6,7 @@ import numpy
 extension = Extension("dbg",
                       sources=["dbg.pyx",
                                "../src/upslope_area.cc",
+                               "../src/accumulated_flow.cc",
                                "../src/initialize_mask.cc",
                                "../src/DEM.cc",
                                ],

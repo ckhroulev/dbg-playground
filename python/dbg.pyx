@@ -23,20 +23,7 @@ def initialize_mask(np.ndarray[dtype=double_t, ndim=2, mode="c"] thk):
 
     return mask
 
-def upslope_area(np.ndarray[dtype=double_t, ndim=1] x,
-           np.ndarray[dtype=double_t, ndim=1] y,
-           np.ndarray[dtype=double_t, ndim=2, mode="c"] z,
-           np.ndarray[dtype=int_t, ndim=2, mode="c"] mask,
-           copy = False, print_output = False):
-    """
-    arguments:
-    - x, y: 1D arrays with coordinates
-    - z: surface elevation, a 2D array
-    - mask: mask, integers, a 2D array
-    - inplace: boolean; True if the mask is to be modified in place
-    """
-    cdef np.ndarray[dtype=int_t, ndim=2, mode="c"] output
-
+cdef check_dimensions(x, y, z, mask):
     # z and mask are typed, so z.shape is not a Python object.
     # This means that we have to compare z.shape[0,1] to mask.shape[0,1] 'by hand'.
     if not (z.shape[0] == mask.shape[0] and z.shape[1] == mask.shape[1]):
@@ -49,6 +36,29 @@ def upslope_area(np.ndarray[dtype=double_t, ndim=1] x,
     if x.size != z.shape[1]:
         raise ValueError("the size of x has to match the number of columns in z")
 
+def upslope_area(np.ndarray[dtype=double_t, ndim=1] x,
+                 np.ndarray[dtype=double_t, ndim=1] y,
+                 np.ndarray[dtype=double_t, ndim=2, mode="c"] z,
+                 np.ndarray[dtype=int_t, ndim=2, mode="c"] mask,
+                 copy = False, print_output = False):
+    """
+    Computes the upslope area of points marked in the mask argument.
+
+    Ice-free cells should be marked with -1, icy cells to be processed with -2,
+    cells at termini (icy or not) with positive numbers, one per terminus.
+
+    Try initialize_mask(thickness) if you don't know where termini are.
+
+    arguments:
+    - x, y: 1D arrays with coordinates
+    - z: surface elevation, a 2D NumPy array
+    - mask: mask, integers, a 2D NumPy array
+    - copy: boolean; False if the mask is to be modified in place
+    """
+    cdef np.ndarray[dtype=int_t, ndim=2, mode="c"] output
+
+    check_dimensions(x, y, z, mask)
+
     if copy:
         output = mask.copy()
     else:
@@ -57,5 +67,35 @@ def upslope_area(np.ndarray[dtype=double_t, ndim=1] x,
     dbg_c.upslope_area(<double*>x.data, x.size, <double*>y.data, y.size,
                        <double*>z.data, <int*>output.data,
                        print_output)
+
+    return output
+
+def accumulated_flow(np.ndarray[dtype=double_t, ndim=1] x,
+                     np.ndarray[dtype=double_t, ndim=1] y,
+                     np.ndarray[dtype=double_t, ndim=2, mode="c"] z,
+                     np.ndarray[dtype=int_t, ndim=2, mode="c"] mask,
+                     copy = False):
+    """
+    Computes the accumulated flow map.
+
+    Ice-free cells should be marked with -1, icy cells with 0.
+
+    arguments:
+    - x, y: 1D arrays with coordinates
+    - z: surface elevation, a 2D NumPy array
+    - mask: mask, integers, a 2D NumPy array
+    - copy: boolean; False if the mask is to be modified in place
+    """
+    cdef np.ndarray[dtype=int_t, ndim=2, mode="c"] output
+
+    check_dimensions(x, y, z, mask)
+
+    if copy:
+        output = mask.copy()
+    else:
+        output = mask
+
+    dbg_c.accumulated_flow(<double*>x.data, x.size, <double*>y.data, y.size,
+                           <double*>z.data, <int*>output.data)
 
     return output

@@ -1,7 +1,7 @@
 #include "dbg_internal.hh"
 #include "DEM.hh"
 
-static int streamline2(dbg_context ctx, int i, int j, Array2D<int> mask) {
+static int streamline2(dbg_context ctx, int i_start, int j_start, Array2D<int> mask) {
   DEM *dem = (DEM*)ctx.system.params;
 
   int n_max = (dem->Mx + dem->My) * ctx.steps_per_cell,
@@ -35,6 +35,7 @@ static int streamline2(dbg_context ctx, int i, int j, Array2D<int> mask) {
       break;
 
     if (i != i_old || j != j_old) {
+#pragma omp atomic
       mask(i, j) += 1;
     }
 
@@ -69,8 +70,9 @@ int accumulated_flow(double *x, int Mx, double *y, int My, double *z, int *my_ma
     gsl_odeiv_system system = {right_hand_side, NULL, 2, &dem};
     gsl_odeiv_step *step = gsl_odeiv_step_alloc(gsl_odeiv_step_rkf45, 2);
     dbg_context ctx = {system, step, 2, // steps per cell
-                      0, 0, 0};
+                       0, 0, 0};
 
+#pragma omp for schedule(dynamic)
     for (int j = 0; j < My; j++) { // Note: traverse in the optimal order
       for (int i = 0; i < Mx; i++) {
         streamline2(ctx, i, j, mask);

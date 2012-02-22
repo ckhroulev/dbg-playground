@@ -2,12 +2,12 @@
 cimport numpy as np
 import numpy as np
 
-cimport basins_c
+cimport dbg_c
 
 ctypedef np.float64_t double_t
 ctypedef np.int32_t int_t
 
-def init_mask(np.ndarray[dtype=double_t, ndim=2, mode="c"] thk):
+def initialize_mask(np.ndarray[dtype=double_t, ndim=2, mode="c"] thk):
     """
     Use ice thickness to initialize the mask.
     """
@@ -19,11 +19,11 @@ def init_mask(np.ndarray[dtype=double_t, ndim=2, mode="c"] thk):
 
     mask = np.zeros((thk.shape[0], thk.shape[1]), dtype=np.int32)
 
-    basins_c.init_mask(Mx, My, <double*>thk.data, <int*> mask.data)
+    dbg_c.initialize_mask(Mx, My, <double*>thk.data, <int*> mask.data)
 
     return mask
 
-def basins(np.ndarray[dtype=double_t, ndim=1] x,
+def upslope_area(np.ndarray[dtype=double_t, ndim=1] x,
            np.ndarray[dtype=double_t, ndim=1] y,
            np.ndarray[dtype=double_t, ndim=2, mode="c"] z,
            np.ndarray[dtype=int_t, ndim=2, mode="c"] mask,
@@ -54,10 +54,8 @@ def basins(np.ndarray[dtype=double_t, ndim=1] x,
     else:
         output = mask
 
-    basins_c.basins(<double*>x.data, x.size,
-                    <double*>y.data, y.size,
-                    <double*>z.data,
-                    <int*>output.data,
-                    print_output)
+    dbg_c.upslope_area(<double*>x.data, x.size, <double*>y.data, y.size,
+                       <double*>z.data, <int*>output.data,
+                       print_output)
 
     return output

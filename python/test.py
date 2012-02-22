@@ -8,7 +8,7 @@ except:
 import sys
 import numpy as np
 import pylab as plt
-import basins
+import dbg
 
 # read the DEM data
 nc = NC(sys.argv[1])
@@ -18,10 +18,10 @@ thk = np.array(np.squeeze(nc.variables['thk'][:]), dtype=np.double)
 z = np.array(np.squeeze(nc.variables['usurf'][:]), dtype=np.double)
 
 # initialize the mask
-mask = basins.init_mask(thk)
+mask = dbg.initialize_mask(thk)
 print "Mask initialization: done"
 
-basins.basins(x, y, z, mask)
+dbg.upslope_area(x, y, z, mask)
 print "Drainage basin computation: done"
 
 plt.figure(1)

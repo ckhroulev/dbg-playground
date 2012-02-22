@@ -5,7 +5,7 @@
 
 #include "Array2D.hh"
 
-// A DEM on a regular cartesian grid.
+// A DEM on a regular cartesian grid. Uses bilinear interpolation.
 class DEM {
 public:
   DEM(double *x, int Mx, double *y, int My, double *z);

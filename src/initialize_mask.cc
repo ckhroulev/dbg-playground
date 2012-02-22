@@ -1,7 +1,7 @@
 #include <string.h>             // memset
-#include "basins.hh"
+#include "dbg_internal.hh"
 
-int init_mask(int Mx, int My, double *thickness, int* output) {
+int initialize_mask(int Mx, int My, double *thickness, int* output) {
   Array2D<double> THK(Mx, My);
   Array2D<int> mask(Mx, My), tmp(Mx, My);
 

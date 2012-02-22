@@ -1,26 +1,9 @@
-#include "basins.hh"
+#include "dbg_internal.hh"
 #include "DEM.hh"
-#include <cmath>                // sqrt
-#include <map>                  // map<int,int>
+#include <map>
 
-using namespace std;
-
-int function(double t, const double y[], // inputs
-             double f[],                 // output
-             void* params) {
-
-  ((DEM*)params)->evaluate(y, NULL, f);
-
-  f[0] *= -1;
-  f[1] *= -1;
-
-  return GSL_SUCCESS;
-}
-
-int streamline(coloring_context ctx,
-               int i_start, int j_start,
-               Array2D<int> &old_mask,
-               Array2D<int> &new_mask) {
+static int streamline(dbg_context ctx, int i_start, int j_start,
+                      Array2D<int> &old_mask, Array2D<int> &new_mask) {
   DEM *dem = (DEM*)ctx.system.params;
 
   int mask_counter = 0,
@@ -36,7 +19,7 @@ int streamline(coloring_context ctx,
     elevation,
     gradient_magnitude;
 
-  map<int,int> values;
+  std::map<int,int> values;
 
   int mask_value = old_mask(i_start, j_start);
 
@@ -99,7 +82,7 @@ int streamline(coloring_context ctx,
   int most_frequent_mask_value = NO_VALUE;
   int number_of_occurences = 0;
 
-  map<int,int>::iterator k;
+  std::map<int,int>::iterator k;
   for (k = values.begin(); k != values.end(); ++k) {
     if (k->second > number_of_occurences) {
       number_of_occurences = k->second;
@@ -111,6 +94,61 @@ int streamline(coloring_context ctx,
 
   if (most_frequent_mask_value == NO_VALUE)
     return 1;
+
+  return 0;
+}
+
+int upslope_area(double *x, int Mx, double *y, int My, double *z, int *mask, bool output) {
+  int remaining = 0;
+  const double elevation_step = 10;
+
+  DEM dem(x, Mx, y, My, z);
+
+  Array2D<int> my_mask(Mx, My), new_mask(Mx, My);
+  my_mask.wrap(mask);
+  if (new_mask.allocate() != 0)
+    return -1;
+
+#pragma omp parallel default(shared)
+  {
+    gsl_odeiv_system system = {right_hand_side, NULL, 2, &dem};
+    gsl_odeiv_step *step = gsl_odeiv_step_alloc(gsl_odeiv_step_rkf45, 2);
+    dbg_context ctx = {system, step, 2, 5, 0, elevation_step};
+
+#pragma omp for schedule(dynamic)
+    for (int j = 0; j < My; j++)
+      for (int i = 0; i < Mx; i++)
+        new_mask(i, j) = my_mask(i, j);
+
+    do {
+#pragma omp for schedule(dynamic)
+      for (int j = 0; j < My; j++)
+        for (int i = 0; i < Mx; i++)
+          my_mask(i, j) = new_mask(i, j);
+
+#pragma omp single
+      remaining = 0;
+
+#pragma omp for schedule(dynamic) reduction(+:remaining)
+      for (int j = 0; j < My; j++) { // Note: traverse in the optimal order
+        for (int i = 0; i < Mx; i++) {
+          remaining += streamline(ctx, i, j, my_mask, new_mask);
+        }
+      }
+
+      ctx.min_elevation = ctx.max_elevation;
+      ctx.max_elevation += elevation_step;
+
+    } while (remaining > 0);
+
+    gsl_odeiv_step_free(step);
+
+#pragma omp for schedule(dynamic)
+    for (int j = 0; j < My; j++)
+      for (int i = 0; i < Mx; i++)
+	my_mask(i, j) = new_mask(i, j);
+
+  } // end of the parallel block
 
   return 0;
 }

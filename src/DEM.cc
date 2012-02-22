@@ -57,10 +57,6 @@ void DEM::evaluate(const double *position, double *elevation, double *gradient) 
                    (1 - alpha) *      beta  * B +
                    alpha       *      beta  * C +
                    alpha       * (1 - beta) * D );
-
-    // Note: we could just do this:
-    // *elevation = A;
-    // and no one would care. It would be a little faster, too.
   }
 
   // the gradient

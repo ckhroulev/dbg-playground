@@ -65,8 +65,8 @@ int accumulated_flow(double *x, int Mx, double *y, int My, double *z, int *my_ma
   Array2D<int> mask(Mx, My);
   mask.wrap(my_mask);
 
+#pragma omp parallel default(shared)
   {
-
     gsl_odeiv_system system = {right_hand_side, NULL, 2, &dem};
     gsl_odeiv_step *step = gsl_odeiv_step_alloc(gsl_odeiv_step_rkf45, 2);
     dbg_context ctx = {system, step, 2, // steps per cell

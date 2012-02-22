@@ -13,7 +13,7 @@ extension = Extension("dbg",
                       include_dirs=[numpy.get_include(), '../src', '/opt/local/include'],
                       library_dirs=['/opt/local/lib'],
                       libraries=['gsl', 'gslcblas', 'gomp'],
-                      extra_compile_args=["-O3", "-ffast-math", "-fopenmp"],
+                      extra_compile_args=["-O3", "-ffast-math", "-fopenmp", "-Wall"],
                       language="c++")
 
 setup(cmdclass = {'build_ext': build_ext},

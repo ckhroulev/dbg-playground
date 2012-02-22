@@ -73,8 +73,8 @@ def upslope_area(np.ndarray[dtype=double_t, ndim=1] x,
 def accumulated_flow(np.ndarray[dtype=double_t, ndim=1] x,
                      np.ndarray[dtype=double_t, ndim=1] y,
                      np.ndarray[dtype=double_t, ndim=2, mode="c"] z,
-                     np.ndarray[dtype=int_t, ndim=2, mode="c"] mask,
-                     copy = False):
+                     np.ndarray[dtype=double_t, ndim=2, mode="c"] mask,
+                     copy = False, n_samples = 1):
     """
     Computes the accumulated flow map.
 
@@ -86,7 +86,7 @@ def accumulated_flow(np.ndarray[dtype=double_t, ndim=1] x,
     - mask: mask, integers, a 2D NumPy array
     - copy: boolean; False if the mask is to be modified in place
     """
-    cdef np.ndarray[dtype=int_t, ndim=2, mode="c"] output
+    cdef np.ndarray[dtype=double_t, ndim=2, mode="c"] output
 
     check_dimensions(x, y, z, mask)
 
@@ -96,6 +96,6 @@ def accumulated_flow(np.ndarray[dtype=double_t, ndim=1] x,
         output = mask
 
     dbg_c.accumulated_flow(<double*>x.data, x.size, <double*>y.data, y.size,
-                           <double*>z.data, <int*>output.data)
+                           <double*>z.data, <double*>output.data, n_samples)
 
     return output

@@ -9,4 +9,6 @@ int upslope_area(double *x, int Mx, double *y, int My, double *z, int *mask, boo
 
 int accumulated_flow(double *x, int Mx, double *y, int My, double *z, double *my_mask, int n_samples);
 
+int pnpoly(int nvert, double *vertx, double *verty, double testx, double testy);
+
 #endif /* _DBG_H_ */

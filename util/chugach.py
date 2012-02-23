@@ -11,6 +11,8 @@ try:
 except:
     import netCDF3 as NC
 
+import dbg
+
 nc = NC.Dataset("/Users/constantine/chugach/chugachmountains.nc")
 
 x = nc.variables['x'][:]
@@ -23,22 +25,17 @@ f = shapefile.Reader("/Users/constantine/chugach/outlines/outlines_zurich_sp.shp
 plt.figure(1)
 # plt.pcolormesh(x,y,dem)
 
-import matplotlib.nxutils as nx
+mask = np.zeros(dem.shape, dtype=np.int32)
 
-def inc_mask(x, y, mask, pts):
-    for j in xrange(y.size):
-        for i in xrange(x.size):
-            mask[j,i] += nx.pnpoly(x[i], y[j], pts)
-
-# mask = np.zeros(dem.shape, dtype=np.int32)
-
-for s in f.shapes():
+for s in f.shapes()[0:200]:
     pts = np.array(s.points)
 
     if len(s.parts) == 1:
-        # inc_mask(x, y, mask, pts)
-
         xx, yy = (pts[:,0], pts[:,1])
+
+        dbg.increment_mask(x, y, xx, yy, mask)
+        sys.stdout.write(".")
+
         plt.fill(xx, yy, color="black", alpha=0.25)
         continue
 

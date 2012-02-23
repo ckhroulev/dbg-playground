@@ -9,6 +9,7 @@ extension = Extension("dbg",
                                "../src/accumulated_flow.cc",
                                "../src/initialize_mask.cc",
                                "../src/DEM.cc",
+                               "../src/pnpoly.cc"
                                ],
                       include_dirs=[numpy.get_include(), '../src', '/opt/local/include'],
                       library_dirs=['/opt/local/lib'],

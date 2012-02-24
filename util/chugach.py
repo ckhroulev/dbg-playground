@@ -27,14 +27,14 @@ plt.figure(1)
 
 mask = np.zeros(dem.shape, dtype=np.int32)
 
-for s in f.shapes()[0:200]:
+for s in f.shapes():
     pts = np.array(s.points)
 
     if len(s.parts) == 1:
         xx, yy = (pts[:,0], pts[:,1])
 
-        dbg.increment_mask(x, y, xx, yy, mask)
-        sys.stdout.write(".")
+        # dbg.increment_mask(x, y, xx, yy, mask)
+        # sys.stdout.write(".")
 
         plt.fill(xx, yy, color="black", alpha=0.25)
         continue

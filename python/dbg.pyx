@@ -103,26 +103,3 @@ def accumulated_flow(np.ndarray[dtype=double_t, ndim=1] x,
                            <double*>z.data, <double*>output.data, n_samples)
 
     return output
-
-def increment_mask(np.ndarray[dtype=double_t, ndim=1] x,
-                   np.ndarray[dtype=double_t, ndim=1] y,
-                   np.ndarray[dtype=double_t, ndim=1] pts_x,
-                   np.ndarray[dtype=double_t, ndim=1] pts_y,
-                   np.ndarray[dtype=int_t, ndim=2, mode="c"] mask):
-
-    if y.size != mask.shape[0]:
-        raise ValueError("the size of y has to match the number of rows in mask")
-
-    if x.size != mask.shape[1]:
-        raise ValueError("the size of x has to match the number of columns in mask")
-
-    if pts_x.size != pts_y.size:
-        raise ValueError("sizes of pts_x and pts_y have to match")
-
-    for j in range(y.size):
-        for i in range(x.size):
-            mask[j,i] += dbg_c.pnpoly(pts_x.size,
-                                      <double*>pts_x.data,
-                                      <double*>pts_y.data,
-                                      x[i], y[j])
-    pass

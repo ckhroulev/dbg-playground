@@ -1,6 +1,6 @@
+# -*- mode: python -*-
 #cython: boundscheck=False
 #cython: wraparound=False
-# -*- mode: python -*-
 # Comments above are special. Please do not remove.
 
 cimport numpy as np
